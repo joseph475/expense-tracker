@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import type { ExpenseWithCategory } from "@/types/database";
+import type { TransactionWithCategory } from "@/types/database";
 import { deleteExpense } from "../actions";
 
 export default function ExpenseItem({
   expense,
 }: {
-  expense: ExpenseWithCategory;
+  expense: TransactionWithCategory;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,14 +27,14 @@ export default function ExpenseItem({
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
       {/* Icon */}
-      <span className="text-xl shrink-0">{expense.category.icon}</span>
+      <span className="text-xl shrink-0">{expense.category?.icon || "💸"}</span>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
-          {expense.description ?? expense.category.name}
+          {expense.description ?? expense.category?.name ?? "Expense"}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">{expense.category.name}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{expense.category?.name ?? "Expense"}</p>
       </div>
 
       {/* Amount */}

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { ExpenseWithCategory } from "@/types/database";
+import type { TransactionWithCategory } from "@/types/database";
 import ExpenseItem from "./ExpenseItem";
 
 export default async function ExpenseList({ userId }: { userId: string }) {
@@ -29,11 +29,11 @@ export default async function ExpenseList({ userId }: { userId: string }) {
   }
 
   // Group by date
-  const grouped = expenses.reduce<Record<string, ExpenseWithCategory[]>>(
+  const grouped = expenses.reduce<Record<string, TransactionWithCategory[]>>(
     (acc, expense) => {
       const date = expense.date;
       if (!acc[date]) acc[date] = [];
-      acc[date].push(expense as ExpenseWithCategory);
+      acc[date].push(expense as TransactionWithCategory);
       return acc;
     },
     {}
