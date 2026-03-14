@@ -1,12 +1,8 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbopack: {
-      root: path.resolve(__dirname),
-    },
-  },
+  // Remove turbopack configuration for production builds
+  // Turbopack is only for development mode
 };
 
 export default nextConfig;
