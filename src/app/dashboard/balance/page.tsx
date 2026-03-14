@@ -199,12 +199,12 @@ export default async function BalancePage() {
                         </td>
                         <td className="sticky left-24 z-10 bg-white px-4 py-3 min-w-40">
                           <div className="flex items-center gap-2">
-                            <span className="text-base shrink-0">{t.category.icon}</span>
+                            <span className="text-base shrink-0">{t.category?.icon || "🔄"}</span>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate max-w-36">
-                                {t.description ?? t.category.name}
+                                {t.description ?? t.category?.name ?? "Transfer"}
                               </p>
-                              <p className="text-xs text-gray-400 truncate">{t.category.name}</p>
+                              <p className="text-xs text-gray-400 truncate">{t.category?.name ?? "Transfer"}</p>
                             </div>
                           </div>
                         </td>
