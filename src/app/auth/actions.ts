@@ -16,8 +16,7 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
   });
 
   if (error) {
-    // Supabase returns "Invalid login credentials" — normalise for the UI
-    return { error: "Invalid email or password. Please try again." };
+    return { error: error.message };
   }
 
   redirect("/dashboard");

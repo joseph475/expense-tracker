@@ -12,10 +12,6 @@ export default function AuthForm() {
   const action = mode === "login" ? login : signup;
   const [state, formAction, isPending] = useActionState(action, initialState);
 
-  function toggleMode() {
-    setMode((m) => (m === "login" ? "signup" : "login"));
-  }
-
   const isLogin = mode === "login";
 
   return (
@@ -112,7 +108,7 @@ export default function AuthForm() {
         <p className="text-center text-sm text-gray-500">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={toggleMode}
+            onClick={() => setMode(isLogin ? "signup" : "login")}
             className="font-medium text-indigo-600 hover:text-indigo-500 transition"
           >
             {isLogin ? "Sign up" : "Sign in"}

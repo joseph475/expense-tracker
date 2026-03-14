@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug: Server-side (Node)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "env": {
+        "PATH": "/Users/joseph-macbookpro-m3/.nvm/versions/node/v20.18.0/bin:${env:PATH}"
+      }
+    },
+    {
+      "name": "Debug: Client-side (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src"
+    },
+    {
+      "name": "Debug: Full-stack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "env": {
+        "PATH": "/Users/joseph-macbookpro-m3/.nvm/versions/node/v20.18.0/bin:${env:PATH}"
+      },
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    }
+  ]
+}
