@@ -62,6 +62,17 @@ export default function AddTransactionSheet({
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Reset form state when modal opens
+  useEffect(() => {
+    if (open) {
+      formRef.current?.reset();
+      setSelectedCategory(null);
+      setSelectedAccount(null);
+      setSelectedToAccount(null);
+      setType("expense");
+    }
+  }, [open]);
+
   useEffect(() => {
     setSelectedCategory(null);
     setSelectedAccount(null);
