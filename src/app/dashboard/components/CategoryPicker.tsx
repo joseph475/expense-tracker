@@ -14,10 +14,10 @@ export default function CategoryPicker({
   const filtered = categories.filter((c) => c.type === type);
 
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-gray-700">Category</label>
+    <div className="space-y-3">
+      <p className="text-lg font-medium text-gray-900">Category</p>
       <input type="hidden" name="category_id" value={selected} />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {filtered.map((cat) => {
           const active = selected === cat.id;
           return (
@@ -25,20 +25,20 @@ export default function CategoryPicker({
               key={cat.id}
               type="button"
               onClick={() => setSelected(cat.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-medium transition active:scale-95 ${
+              className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-base font-medium transition active:scale-95 ${
                 active
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow"
-                  : "bg-white border-gray-200 text-gray-700 hover:border-indigo-300"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <span>{cat.icon}</span>
+              <span className="text-lg">{cat.icon}</span>
               <span>{cat.name}</span>
             </button>
           );
         })}
       </div>
       {!selected && (
-        <p className="text-xs text-gray-400">Tap a category to select it.</p>
+        <p className="text-sm text-gray-500">Tap a category to select it.</p>
       )}
     </div>
   );

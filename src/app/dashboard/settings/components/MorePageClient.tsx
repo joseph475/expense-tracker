@@ -85,26 +85,29 @@ export default function MorePageClient({
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">More</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <h1 className="text-lg font-bold text-gray-900">Settings</h1>
       </div>
 
       {/* User info */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-          <span className="text-lg font-bold text-indigo-600">
-            {email.charAt(0).toUpperCase()}
-          </span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{email}</p>
-          <p className="text-xs text-gray-400">Signed in</p>
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+            <span className="text-lg font-bold text-indigo-600">
+              {email.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{email}</p>
+            <p className="text-xs text-gray-500">Signed in</p>
+          </div>
         </div>
       </div>
 
       {/* Settings menu */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white border-b border-gray-100">
         {menuItems.map((item, i) => (
           <button
             key={item.key}
@@ -113,25 +116,27 @@ export default function MorePageClient({
               i < menuItems.length - 1 ? "border-b border-gray-100" : ""
             }`}
           >
-            <span className="text-xl shrink-0">{item.icon}</span>
+            <span className="text-lg shrink-0">{item.icon}</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900">{item.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{item.description}</p>
+              <p className="text-xs text-gray-500">{item.description}</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+            <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
           </button>
         ))}
       </div>
 
       {/* Sign out */}
-      <form action={logout}>
-        <button
-          type="submit"
-          className="w-full py-3.5 rounded-2xl text-sm font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-50 active:bg-red-100 transition"
-        >
-          Sign Out
-        </button>
-      </form>
+      <div className="px-4 py-6">
+        <form action={logout}>
+          <button
+            type="submit"
+            className="w-full py-3 rounded-lg text-sm font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-50 active:bg-red-100 transition"
+          >
+            Sign Out
+          </button>
+        </form>
+      </div>
 
       {/* Sheets */}
       <BottomSheet title="Transaction Categories" open={sheet === "tx_categories"} onClose={() => setSheet(null)}>

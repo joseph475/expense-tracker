@@ -6,6 +6,8 @@ import { Suspense } from "react";
 import type { TransactionWithCategory } from "@/types/database";
 import DashboardFilterTabs from "./components/DashboardFilterTabs";
 import AddTransactionButton from "./components/AddTransactionButton";
+import CalendarView from "./components/CalendarView";
+import RecentTransactions from "./components/RecentTransactions";
 
 export default async function DashboardPage({
   searchParams,
@@ -28,9 +30,18 @@ export default async function DashboardPage({
   if (view === "today") {
     dateFrom = todayStr;
     dateTo = todayStr;
-  } else if (view === "date" && date) {
+  } else if (view === "calendar" && date) {
     dateFrom = date;
     dateTo = date;
+  } else if (view === "calendar") {
+    // Calendar view without specific date - show current month
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const [ymYear, ymMonth] = ym.split("-").map(Number);
+    const monthStart = new Date(ymYear, ymMonth - 1, 1);
+    const monthEnd = new Date(ymYear, ymMonth, 0);
+    dateFrom = monthStart.toISOString().split("T")[0];
+    const monthEndStr = monthEnd.toISOString().split("T")[0];
+    dateTo = monthEndStr < todayStr ? monthEndStr : todayStr;
   } else {
     // month view — use ?month=YYYY-MM param or current month
     const ym = month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -102,11 +113,11 @@ export default async function DashboardPage({
 
   // Top 5 expense categories for the period
   const categoryTotals = allTx
-    .filter((t) => t.type === "expense")
+    .filter((t) => t.type === "expense" && t.category_id && t.category)
     .reduce<Record<string, { name: string; icon: string; total: number }>>(
       (acc, t) => {
-        const id = t.category_id;
-        if (!acc[id]) acc[id] = { name: t.category.name, icon: t.category.icon, total: 0 };
+        const id = t.category_id!;
+        if (!acc[id]) acc[id] = { name: t.category!.name, icon: t.category!.icon, total: 0 };
         acc[id].total += Number(t.amount);
         return acc;
       },
@@ -120,115 +131,77 @@ export default async function DashboardPage({
   const recentTx = allTx.slice(0, 5);
 
   return (
-    <div className="space-y-4">
+    <div className="min-h-screen bg-gray-50">
       {/* Filter tabs */}
-      <Suspense fallback={null}>
-        <DashboardFilterTabs />
-      </Suspense>
-
-      {/* Add transaction FAB */}
-      <AddTransactionButton categories={categories ?? []} assets={accountAssets ?? []} />
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-2">
-        {/* Income */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-green-100 rounded-lg">
-              <ArrowDownLeft className="h-3 w-3 text-green-600" />
-            </div>
-            <span className="text-xs font-medium text-gray-500">Income</span>
-          </div>
-          <p className="text-sm font-bold text-gray-900">{symbol}{totalIncome.toFixed(2)}</p>
-        </div>
-
-        {/* Expenses */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1 bg-red-100 rounded-lg">
-              <ArrowUpRight className="h-3 w-3 text-red-500" />
-            </div>
-            <span className="text-xs font-medium text-gray-500">Expenses</span>
-          </div>
-          <p className="text-sm font-bold text-gray-900">{symbol}{totalExpenses.toFixed(2)}</p>
-        </div>
-
-        {/* Total (Net Balance) */}
-        <div className={`rounded-xl border shadow-sm p-3 ${netBalance >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <div className={`p-1 rounded-lg ${netBalance >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-              <TrendingUp className={`h-3 w-3 ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`} />
-            </div>
-            <span className="text-xs font-medium text-gray-500">Total</span>
-          </div>
-          <p className={`text-sm font-bold ${netBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-            {netBalance >= 0 ? '+' : ''}{symbol}{netBalance.toFixed(2)}
-          </p>
-        </div>
+      <div className="bg-white border-b border-gray-100">
+        <Suspense fallback={null}>
+          <DashboardFilterTabs />
+        </Suspense>
       </div>
 
-      {/* Top spending categories */}
-      {topCategories.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 space-y-2">
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="h-3.5 w-3.5 text-gray-400" />
-            <h2 className="text-xs font-semibold text-gray-700">Top Spending</h2>
-          </div>
-          <div className="space-y-2">
-            {topCategories.map((cat) => {
-              const pct = totalExpenses > 0 ? (cat.total / totalExpenses) * 100 : 0;
-              return (
-                <div key={cat.name} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">
-                      {cat.icon} {cat.name}
-                    </span>
-                    <span className="text-xs font-semibold text-gray-900">
-                      {symbol}{cat.total.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="h-1 rounded-full bg-gray-100">
-                    <div
-                      className="h-1 rounded-full bg-indigo-500 transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+      {/* Add transaction FAB */}
+      <AddTransactionButton categories={categories ?? []} assets={accountAssets ?? []} currencySymbol={symbol} />
+
+      {/* Calendar View */}
+      {view === "calendar" ? (
+        <CalendarView
+          transactions={allTx}
+          symbol={symbol}
+          currentDate={date}
+        />
+      ) : (
+        <>
+          {/* Summary section */}
+          <div className="bg-white px-3 py-3 border-b border-gray-100">
+            <div className="grid grid-cols-3 gap-3">
+              {/* Income */}
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-0.5">
+                  <ArrowDownLeft className="h-3.5 w-3.5 text-green-600 mr-1" />
+                  <span className="text-xs font-medium text-gray-600">Income</span>
                 </div>
-              );
-            })}
+                <p className="text-sm font-bold text-green-600">{symbol}{totalIncome.toFixed(2)}</p>
+              </div>
+
+              {/* Expenses */}
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-0.5">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-red-500 mr-1" />
+                  <span className="text-xs font-medium text-gray-600">Expenses</span>
+                </div>
+                <p className="text-sm font-bold text-red-500">{symbol}{totalExpenses.toFixed(2)}</p>
+              </div>
+
+              {/* Total (Net Balance) */}
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-0.5">
+                  <TrendingUp className={`h-3.5 w-3.5 mr-1 ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`} />
+                  <span className="text-xs font-medium text-gray-600">Total</span>
+                </div>
+                <p className={`text-sm font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {netBalance >= 0 ? '+' : ''}{symbol}{netBalance.toFixed(2)}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+
 
       {/* Recent transactions */}
       {recentTx.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 space-y-2">
-          <h2 className="text-xs font-semibold text-gray-700">Recent Transactions</h2>
-          <div className="divide-y divide-gray-50">
-            {recentTx.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 py-1.5">
-                <span className="text-sm shrink-0">{t.category.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-900 truncate">
-                    {t.description ?? t.category.name}
-                  </p>
-                  <p className="text-xs text-gray-400">{t.date}</p>
-                </div>
-                <span className={`text-xs font-semibold shrink-0 ${t.type === "income" ? "text-green-600" : "text-gray-900"}`}>
-                  {t.type === "income" ? "+" : "-"}{symbol}{Number(t.amount).toFixed(2)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <RecentTransactions transactions={recentTx} currencySymbol={symbol} />
       )}
 
       {/* Empty state */}
       {allTx.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center space-y-1">
-          <p className="text-xs text-gray-500 font-medium">No transactions for this period</p>
-          <p className="text-xs text-gray-400">Tap the + button to add one.</p>
+        <div className="bg-white px-4 py-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <Wallet className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium mb-1">No transactions for this period</p>
+          <p className="text-xs text-gray-400">Tap the + button to add your first transaction</p>
         </div>
+      )}
+        </>
       )}
     </div>
   );

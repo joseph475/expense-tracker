@@ -2,7 +2,7 @@
 // Database Types — Money Tracker
 // ============================================================
 
-export type TransactionType = "expense" | "income";
+export type TransactionType = "expense" | "income" | "transfer";
 export type AssetCategory = "cash" | "investment" | "property" | "vehicle" | "liability" | "other";
 export type CategoryType = "expense" | "income";
 
@@ -17,8 +17,9 @@ export interface Category {
 export interface Transaction {
   id: string;
   user_id: string;
-  category_id: string;
+  category_id: string | null;
   account_id: string | null;
+  to_account_id?: string | null;
   type: TransactionType;
   amount: number;
   description: string | null;
@@ -28,7 +29,7 @@ export interface Transaction {
 }
 
 export interface TransactionWithCategory extends Transaction {
-  category: Category;
+  category: Category | null;
 }
 
 export interface AssetCategoryRow {

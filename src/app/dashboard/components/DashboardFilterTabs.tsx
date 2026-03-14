@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type View = "today" | "month" | "date";
+type View = "today" | "month" | "calendar";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -83,8 +83,8 @@ export default function DashboardFilterTabs() {
   const canGoNext = selectedMonth < todayMonth;
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+    <div className="space-y-2">
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
         <button className={tabClass("today")} onClick={() => navigate("today")}>
           Today
         </button>
@@ -95,20 +95,20 @@ export default function DashboardFilterTabs() {
           Month
         </button>
         <button
-          className={tabClass("date")}
+          className={tabClass("calendar")}
           onClick={() =>
-            navigate("date", {
+            navigate("calendar", {
               date: selectedDate || new Date().toISOString().split("T")[0],
             })
           }
         >
-          Pick Date
+          Calendar
         </button>
       </div>
 
       {view === "month" && (
         <div className="relative w-full" ref={pickerRef}>
-          <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-3 py-2">
+          <div className="flex items-center justify-between bg-white px-3 py-2">
             <button
               onClick={() => navigate("month", { month: addMonths(selectedMonth, -1) })}
               className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition"
@@ -121,7 +121,7 @@ export default function DashboardFilterTabs() {
                 setPickerYear(Number(selectedMonth.split("-")[0]));
                 setPickerOpen((o) => !o);
               }}
-              className="text-sm font-medium text-gray-800 hover:text-indigo-600 transition px-2 py-1 rounded-lg hover:bg-gray-50"
+              className="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition px-2 py-1 rounded-lg hover:bg-gray-50"
             >
               {formatMonth(selectedMonth)}
             </button>
@@ -136,7 +136,7 @@ export default function DashboardFilterTabs() {
           </div>
 
           {pickerOpen && (
-            <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
+            <div className="absolute top-full left-0 w-full mt-1 bg-white rounded-lg shadow-lg z-50 p-3 border border-gray-100">
               {/* Year navigation */}
               <div className="flex items-center justify-between mb-3">
                 <button
@@ -145,7 +145,7 @@ export default function DashboardFilterTabs() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="text-sm font-semibold text-gray-800">{pickerYear}</span>
+                <span className="text-sm font-semibold text-gray-900">{pickerYear}</span>
                 <button
                   onClick={() => setPickerYear((y) => y + 1)}
                   disabled={pickerYear >= todayYear}
@@ -156,7 +156,7 @@ export default function DashboardFilterTabs() {
               </div>
 
               {/* Month grid */}
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {MONTH_NAMES.map((name, i) => {
                   const monthNum = i + 1;
                   const ym = toYM(pickerYear, monthNum);
@@ -170,12 +170,12 @@ export default function DashboardFilterTabs() {
                       key={name}
                       disabled={isFuture}
                       onClick={() => selectMonth(pickerYear, monthNum)}
-                      className={`py-1.5 text-xs font-medium rounded-lg transition ${
+                      className={`py-2 text-xs font-medium rounded-lg transition ${
                         isSelected
                           ? "bg-indigo-600 text-white"
                           : isFuture
                           ? "text-gray-300 pointer-events-none"
-                          : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                          : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 bg-gray-50"
                       }`}
                     >
                       {name}
@@ -188,19 +188,6 @@ export default function DashboardFilterTabs() {
         </div>
       )}
 
-      {view === "date" && (
-        <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <input
-            type="date"
-            defaultValue={selectedDate || new Date().toISOString().split("T")[0]}
-            max={new Date().toISOString().split("T")[0]}
-            onChange={(e) => {
-              if (e.target.value) navigate("date", { date: e.target.value });
-            }}
-            className="w-full box-border px-4 py-2.5 text-sm text-gray-700 bg-transparent focus:outline-none"
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -67,148 +67,228 @@ export default function AccountsClient({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Accounts</h1>
-          <p className="mt-0.5 text-sm text-gray-500">Track what you own and owe.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleEditMode}
-            className={`w-11 h-11 flex items-center justify-center rounded-xl text-sm font-medium transition ${
-              editMode
-                ? "bg-indigo-100 text-indigo-600"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {editMode ? <Check className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
-          </button>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="w-11 h-11 flex items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Accounts</h1>
+            <p className="text-xs text-gray-500">Track what you own and owe</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleEditMode}
+              className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition ${
+                editMode
+                  ? "bg-indigo-100 text-indigo-600"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {editMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => setAddOpen(true)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Summary bar */}
-      <div className="grid grid-cols-3 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-3 text-center border-r border-gray-100">
-          <p className="text-xs text-gray-400 mb-0.5">Assets</p>
-          <p className="text-sm font-bold text-indigo-600">{fmt(totalAssets)}</p>
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 mb-1">Assets</p>
+            <p className="text-sm font-bold text-indigo-600">{fmt(totalAssets)}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 mb-1">Liabilities</p>
+            <p className="text-sm font-bold text-rose-500">-{fmt(totalLiabilities)}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 mb-1">Net Worth</p>
+            <p className={`text-sm font-bold ${netTotal >= 0 ? "text-green-600" : "text-rose-500"}`}>
+              {netTotal >= 0 ? "" : "-"}{fmt(netTotal)}
+            </p>
+          </div>
         </div>
-        <div className="p-3 text-center border-r border-gray-100">
-          <p className="text-xs text-gray-400 mb-0.5">Liabilities</p>
-          <p className="text-sm font-bold text-rose-500">-{fmt(totalLiabilities)}</p>
-        </div>
-        <div className="p-3 text-center">
-          <p className="text-xs text-gray-400 mb-0.5">Total</p>
-          <p className={`text-sm font-bold ${netTotal >= 0 ? "text-gray-900" : "text-rose-500"}`}>
-            {netTotal >= 0 ? "" : "-"}{fmt(netTotal)}
-          </p>
+      </div>
+
+      {/* Table Headers */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="grid grid-cols-3 items-center gap-4 px-4 py-2">
+          <div>
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Account</span>
+          </div>
+          <div className="text-right">
+            <span className="text-xs font-medium text-rose-500 uppercase tracking-wide">Liabilities</span>
+          </div>
+          <div className="text-right">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Assets</span>
+          </div>
         </div>
       </div>
 
       {/* Account groups */}
       {groups.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
-          <p className="text-sm text-gray-400">No accounts yet. Tap <strong>+</strong> to add one.</p>
+        <div className="bg-white px-4 py-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <Plus className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium mb-1">No accounts yet</p>
+          <p className="text-xs text-gray-400">Tap the + button to add your first account</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div>
           {groups.map((group) => (
-            <div
-              key={group.key}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-            >
+            <div key={group.key} className="bg-white border-b border-gray-100">
               {/* Group header */}
-              <div
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-100 ${
-                  group.isLiability ? "bg-rose-50" : "bg-gray-50"
-                }`}
-              >
+              <div className={`grid grid-cols-3 items-center gap-4 px-4 py-3 border-b border-gray-100 ${
+                group.isLiability ? "bg-rose-50" : "bg-gray-50"
+              }`}>
                 <span className="text-sm font-semibold text-gray-700">
                   {group.icon} {group.label}
                 </span>
-                <span
-                  className={`text-sm font-bold ${
-                    group.isLiability ? "text-rose-500" : "text-gray-900"
-                  }`}
-                >
-                  {group.isLiability ? "-" : ""}{fmt(group.total)}
-                </span>
+                
+                {/* Liability Total Column */}
+                <div className="text-right">
+                  {group.isLiability && (
+                    <span className="text-sm font-bold text-rose-500">
+                      -{fmt(Math.abs(group.total))}
+                    </span>
+                  )}
+                </div>
+                
+                {/* Asset Total Column */}
+                <div className="text-right">
+                  {!group.isLiability && (
+                    <span className="text-sm font-bold text-gray-900">
+                      {fmt(group.total)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Account rows */}
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-gray-100">
                 {group.accounts.map((account) => (
-                  <div key={account.id} className="flex items-center gap-3 px-4 py-3">
-                    {/* Delete button (edit mode) */}
-                    {editMode && (
-                      <button
-                        onClick={() => handleDelete(account.id)}
-                        disabled={deletingId === account.id}
-                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-rose-500 hover:bg-rose-600 text-white transition"
-                      >
-                        {deletingId === account.id
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <X className="h-3 w-3" />}
-                      </button>
-                    )}
-
-                    {/* Name */}
-                    <p className="flex-1 text-sm text-gray-800">{account.name}</p>
-
-                    {/* Value — editable in edit mode */}
-                    {editMode && editingId === account.id ? (
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-                            {symbol}
-                          </span>
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            step="0.01"
-                            min="0"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveValue(account.id);
-                              if (e.key === "Escape") setEditingId(null);
-                            }}
-                            className="w-28 pl-5 pr-2 py-1.5 rounded-lg border border-indigo-400 text-sm text-right focus:outline-none"
-                            autoFocus
-                          />
-                        </div>
+                  <div key={account.id} className="grid grid-cols-3 items-center gap-4 px-4 py-3">
+                    {/* Account Name */}
+                    <div className="flex items-center gap-3">
+                      {/* Delete button (edit mode) */}
+                      {editMode && (
                         <button
-                          onClick={() => handleSaveValue(account.id)}
-                          className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition"
+                          onClick={() => handleDelete(account.id)}
+                          disabled={deletingId === account.id}
+                          className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-rose-500 hover:bg-rose-600 text-white transition"
                         >
-                          <Check className="h-3.5 w-3.5" />
+                          {deletingId === account.id
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <X className="h-3 w-3" />}
                         </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => editMode && startEdit(account)}
-                        disabled={!editMode}
-                        className={`text-sm font-medium shrink-0 ${
-                          group.isLiability ? "text-rose-500" : "text-gray-900"
-                        } ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
-                      >
-                        {group.isLiability ? "-" : ""}
-                        {fmt(Number(account.current_value))}
-                      </button>
-                    )}
+                      )}
+                      <p className="text-sm text-gray-800">{account.name}</p>
+                    </div>
+
+                    {/* Liability Column */}
+                    <div className="text-right">
+                      {group.isLiability && (
+                        editMode && editingId === account.id ? (
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <div className="relative">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+                                {symbol}
+                              </span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveValue(account.id);
+                                  if (e.key === "Escape") setEditingId(null);
+                                }}
+                                className="w-24 pl-5 pr-2 py-1.5 rounded-lg border border-indigo-400 text-sm text-right focus:outline-none"
+                                autoFocus
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleSaveValue(account.id)}
+                              className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => editMode && startEdit(account)}
+                            disabled={!editMode}
+                            className={`text-sm font-medium text-rose-500 ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
+                          >
+                            -{fmt(Math.abs(Number(account.current_value)))}
+                          </button>
+                        )
+                      )}
+                    </div>
+
+                    {/* Asset Column */}
+                    <div className="text-right">
+                      {!group.isLiability && (
+                        editMode && editingId === account.id ? (
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <div className="relative">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+                                {symbol}
+                              </span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveValue(account.id);
+                                  if (e.key === "Escape") setEditingId(null);
+                                }}
+                                className="w-24 pl-5 pr-2 py-1.5 rounded-lg border border-indigo-400 text-sm text-right focus:outline-none"
+                                autoFocus
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleSaveValue(account.id)}
+                              className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => editMode && startEdit(account)}
+                            disabled={!editMode}
+                            className={`text-sm font-medium text-gray-900 ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
+                          >
+                            {fmt(Number(account.current_value))}
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

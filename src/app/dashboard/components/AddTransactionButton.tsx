@@ -8,9 +8,11 @@ import type { Asset, Category } from "@/types/database";
 export default function AddTransactionButton({
   categories,
   assets,
+  currencySymbol = "$",
 }: {
   categories: Category[];
   assets: Asset[];
+  currencySymbol?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -19,13 +21,19 @@ export default function AddTransactionButton({
       {/* Mobile FAB */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-30 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center transition md:hidden"
+        className="fixed bottom-[6.5rem] right-4 z-30 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center transition md:hidden"
         aria-label="Add Transaction"
       >
         <Plus className="h-6 w-6" />
       </button>
 
-      <AddTransactionSheet open={open} onClose={() => setOpen(false)} categories={categories} assets={assets} />
+      <AddTransactionSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        categories={categories}
+        assets={assets}
+        currencySymbol={currencySymbol}
+      />
     </>
   );
 }

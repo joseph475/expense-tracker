@@ -22,8 +22,8 @@ export default async function DashboardLayout({
       <Sidebar email={session.user.email!} />
 
       {/* Main content — offset for sidebar on desktop */}
-      <main className="flex-1 md:ml-64 pb-24 md:pb-0">
-        <div className="max-w-4xl mx-auto px-3 py-4">{children}</div>
+      <main className="flex-1 md:ml-64 pb-20 md:pb-0">
+        <div className="md:max-w-4xl md:mx-auto md:px-4 md:py-6">{children}</div>
       </main>
     </div>
   );

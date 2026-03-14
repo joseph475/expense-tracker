@@ -57,26 +57,26 @@ export default function AddExpenseSheet({
       }`}>
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 shrink-0">
             <h2 className="text-lg font-semibold text-gray-900">Add Expense</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Form */}
-          <form ref={formRef} action={formAction} className="flex-1 px-5 py-5 space-y-4 overflow-y-auto">
+          <form ref={formRef} action={formAction} className="flex-1 px-4 py-2 space-y-4 overflow-y-auto">
 
             {/* Amount */}
             <div className="space-y-1.5">
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-900">
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                   $
                 </span>
                 <input
@@ -88,7 +88,7 @@ export default function AddExpenseSheet({
                   min="0.01"
                   required
                   placeholder="0.00"
-                  className="w-full pl-7 pr-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className="w-full pl-7 pr-4 py-3 rounded-xl bg-gray-50 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
                 />
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function AddExpenseSheet({
 
             {/* Date */}
             <div className="space-y-1.5">
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="date" className="block text-sm font-medium text-gray-900">
                 Date
               </label>
               <input
@@ -107,38 +107,38 @@ export default function AddExpenseSheet({
                 type="date"
                 required
                 defaultValue={today()}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-3 py-3 rounded-xl bg-gray-50 text-base text-gray-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-900">
                 Description
-                <span className="ml-1 text-gray-400 font-normal">(optional)</span>
+                <span className="ml-1 text-gray-500 font-normal">(optional)</span>
               </label>
               <input
                 id="description"
                 name="description"
                 type="text"
                 placeholder="e.g. Lunch with team"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full px-3 py-3 rounded-xl bg-gray-50 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
 
             {/* Error */}
             {state.error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
                 {state.error}
               </p>
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 pb-6 border-t border-gray-100 mt-6">
+            <div className="flex gap-3 pt-4 mt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-100 transition bg-gray-50"
               >
                 Cancel
               </button>
