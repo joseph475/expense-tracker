@@ -246,13 +246,39 @@ export default function AddTransactionSheet({
                   <h3 className="text-lg font-semibold text-gray-900">Select Account</h3>
                 </div>
                 <div className="overflow-y-auto max-h-[50vh] p-4">
-                  {Object.entries(
-                    assets.reduce<Record<string, Asset[]>>((acc, a) => {
+                  {(() => {
+                    // Filter assets for transfer "from" account (exclude liabilities)
+                    const filteredAssets = type === "transfer"
+                      ? assets.filter(a => a.category !== "liability")
+                      : assets;
+
+                    // Group assets by category
+                    const groupedAssets = filteredAssets.reduce<Record<string, Asset[]>>((acc, a) => {
                       if (!acc[a.category]) acc[a.category] = [];
                       acc[a.category].push(a);
                       return acc;
-                    }, {})
-                  ).map(([cat, group]) => (
+                    }, {});
+
+                    // Sort categories based on transaction type
+                    const sortedEntries = Object.entries(groupedAssets).sort(([catA], [catB]) => {
+                      const isLiabilityA = catA === "liability";
+                      const isLiabilityB = catB === "liability";
+
+                      if (type === "expense") {
+                        // For expenses: liability categories first
+                        if (isLiabilityA && !isLiabilityB) return -1;
+                        if (!isLiabilityA && isLiabilityB) return 1;
+                      } else if (type === "income") {
+                        // For income: non-liability categories first
+                        if (!isLiabilityA && isLiabilityB) return -1;
+                        if (isLiabilityA && !isLiabilityB) return 1;
+                      }
+                      
+                      return catA.localeCompare(catB);
+                    });
+
+                    return sortedEntries;
+                  })().map(([cat, group]) => (
                     <div key={cat} className="mb-4">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
                         {CATEGORY_LABELS[cat as AssetCategory] ?? cat}
@@ -292,13 +318,28 @@ export default function AddTransactionSheet({
                   <h3 className="text-lg font-semibold text-gray-900">Select Destination Account</h3>
                 </div>
                 <div className="overflow-y-auto max-h-[50vh] p-4">
-                  {Object.entries(
-                    assets.reduce<Record<string, Asset[]>>((acc, a) => {
+                  {(() => {
+                    // Group all assets by category (no filtering for "to" account)
+                    const groupedAssets = assets.reduce<Record<string, Asset[]>>((acc, a) => {
                       if (!acc[a.category]) acc[a.category] = [];
                       acc[a.category].push(a);
                       return acc;
-                    }, {})
-                  ).map(([cat, group]) => (
+                    }, {});
+
+                    // Sort categories: non-liability first, then liability
+                    const sortedEntries = Object.entries(groupedAssets).sort(([catA], [catB]) => {
+                      const isLiabilityA = catA === "liability";
+                      const isLiabilityB = catB === "liability";
+
+                      // Non-liability categories first
+                      if (!isLiabilityA && isLiabilityB) return -1;
+                      if (isLiabilityA && !isLiabilityB) return 1;
+                      
+                      return catA.localeCompare(catB);
+                    });
+
+                    return sortedEntries;
+                  })().map(([cat, group]) => (
                     <div key={cat} className="mb-4">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
                         {CATEGORY_LABELS[cat as AssetCategory] ?? cat}

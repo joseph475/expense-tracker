@@ -19,3 +19,9 @@ export const CURRENCIES = [
 export function formatAmount(amount: number, symbol: string): string {
   return `${symbol}${amount.toFixed(2)}`;
 }
+
+export function formatCurrency(amount: number, currencyCode: string): string {
+  const currency = CURRENCIES.find(c => c.code === currencyCode);
+  const symbol = currency?.symbol || "$";
+  return formatAmount(amount, symbol);
+}

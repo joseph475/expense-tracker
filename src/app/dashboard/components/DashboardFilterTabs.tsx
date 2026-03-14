@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import SearchAndFilter from "./SearchAndFilter";
 
 type View = "today" | "month" | "calendar";
 
@@ -31,7 +32,21 @@ function addMonths(ym: string, delta: number) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export default function DashboardFilterTabs() {
+interface Asset {
+  id: string;
+  name: string;
+  asset_categories?: {
+    name: string;
+    icon: string;
+    is_liability: boolean;
+  };
+}
+
+interface DashboardFilterTabsProps {
+  assets?: Asset[];
+}
+
+export default function DashboardFilterTabs({ assets = [] }: DashboardFilterTabsProps) {
   const router = useRouter();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
@@ -83,27 +98,35 @@ export default function DashboardFilterTabs() {
   const canGoNext = selectedMonth < todayMonth;
 
   return (
-    <div className="space-y-2">
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-        <button className={tabClass("today")} onClick={() => navigate("today")}>
-          Today
-        </button>
-        <button
-          className={tabClass("month")}
-          onClick={() => navigate("month", { month: selectedMonth })}
-        >
-          Month
-        </button>
-        <button
-          className={tabClass("calendar")}
-          onClick={() =>
-            navigate("calendar", {
-              date: selectedDate || new Date().toISOString().split("T")[0],
-            })
-          }
-        >
-          Calendar
-        </button>
+    <div className="space-y-3">
+      {/* Search and Filter Row */}
+      <div className="flex items-center justify-between px-4">
+        <SearchAndFilter assets={assets} />
+      </div>
+      
+      {/* Tabs Row */}
+      <div className="px-4">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <button className={tabClass("today")} onClick={() => navigate("today")}>
+            Today
+          </button>
+          <button
+            className={tabClass("month")}
+            onClick={() => navigate("month", { month: selectedMonth })}
+          >
+            Month
+          </button>
+          <button
+            className={tabClass("calendar")}
+            onClick={() =>
+              navigate("calendar", {
+                date: selectedDate || new Date().toISOString().split("T")[0],
+              })
+            }
+          >
+            Calendar
+          </button>
+        </div>
       </div>
 
       {view === "month" && (

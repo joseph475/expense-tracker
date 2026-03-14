@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, MoreHorizontal } from "lucide-react";
+import { BookOpen, Wallet, PieChart, MoreHorizontal } from "lucide-react";
+
+// Get today's date in M/D format
+function getTodayLabel() {
+  const today = new Date();
+  const month = today.getMonth() + 1; // getMonth() returns 0-11
+  const day = today.getDate();
+  return `${month}/${day}`;
+}
 
 const links = [
-  { href: "/dashboard",          label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/accounts", label: "Accounts",  icon: Wallet },
-  { href: "/dashboard/settings", label: "More",      icon: MoreHorizontal },
+  { href: "/dashboard",          label: getTodayLabel(), icon: BookOpen },
+  { href: "/dashboard/accounts", label: "Accounts",      icon: Wallet },
+  { href: "/dashboard/stats",    label: "Stats",         icon: PieChart },
+  { href: "/dashboard/settings", label: "More",          icon: MoreHorizontal },
 ];
 
 export default function Sidebar({ email }: { email: string }) {

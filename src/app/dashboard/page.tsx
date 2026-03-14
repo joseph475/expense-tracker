@@ -12,9 +12,9 @@ import RecentTransactions from "./components/RecentTransactions";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; date?: string; month?: string }>;
+  searchParams: Promise<{ view?: string; date?: string; month?: string; search?: string; accounts?: string }>;
 }) {
-  const { view = "today", date, month } = await searchParams;
+  const { view = "today", date, month, search, accounts } = await searchParams;
 
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -62,7 +62,12 @@ export default async function DashboardPage({
   ] = await Promise.all([
     supabase
       .from("transactions")
-      .select("*, category:categories(*)")
+      .select(`
+        *,
+        category:categories(*),
+        account:assets!account_id(id, name, asset_categories(name, icon, is_liability)),
+        to_account:assets!to_account_id(id, name, asset_categories(name, icon, is_liability))
+      `)
       .eq("user_id", user!.id)
       .gte("date", dateFrom)
       .lte("date", dateTo)
@@ -90,7 +95,29 @@ export default async function DashboardPage({
   ]);
 
   const symbol = settings?.currency_symbol ?? "$";
-  const allTx = (transactions ?? []) as TransactionWithCategory[];
+  let allTx = (transactions ?? []) as TransactionWithCategory[];
+
+  // Apply search filter
+  if (search) {
+    const searchLower = search.toLowerCase();
+    allTx = allTx.filter(tx =>
+      tx.description?.toLowerCase().includes(searchLower) ||
+      tx.category?.name?.toLowerCase().includes(searchLower) ||
+      (tx as any).account?.name?.toLowerCase().includes(searchLower) ||
+      (tx as any).to_account?.name?.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Apply account filter
+  if (accounts) {
+    const accountIds = accounts.split(',').filter(Boolean);
+    if (accountIds.length > 0) {
+      allTx = allTx.filter(tx =>
+        (tx.account_id && accountIds.includes(tx.account_id)) ||
+        (tx.to_account_id && accountIds.includes(tx.to_account_id))
+      );
+    }
+  }
 
   const totalIncome = allTx
     .filter((t) => t.type === "income")
@@ -135,7 +162,7 @@ export default async function DashboardPage({
       {/* Filter tabs */}
       <div className="bg-white border-b border-gray-100">
         <Suspense fallback={null}>
-          <DashboardFilterTabs />
+          <DashboardFilterTabs assets={accountAssets ?? []} />
         </Suspense>
       </div>
 
