@@ -9,18 +9,21 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) redirect("/auth");
+  if (!session) {
+    await supabase.auth.signOut(); // clears the stale cookie so middleware stops looping
+    redirect("/auth");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar email={user.email!} />
+      <Sidebar email={session.user.email!} />
 
       {/* Main content — offset for sidebar on desktop */}
-      <main className="flex-1 md:ml-64 pb-20 md:pb-0">
-        <div className="max-w-4xl mx-auto px-4 py-8">{children}</div>
+      <main className="flex-1 md:ml-64 pb-24 md:pb-0">
+        <div className="max-w-4xl mx-auto px-3 py-4">{children}</div>
       </main>
     </div>
   );

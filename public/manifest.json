@@ -1,0 +1,10 @@
+{
+  "name": "MoneyTracker",
+  "short_name": "MoneyTracker",
+  "description": "Track your money",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait"
+}

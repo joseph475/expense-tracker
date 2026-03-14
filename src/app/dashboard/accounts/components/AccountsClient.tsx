@@ -1,0 +1,228 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
+import { updateAssetValue, deleteAsset } from "../../assets/actions";
+import AddAssetSheet from "../../assets/components/AddAssetSheet";
+import type { AssetCategoryRow, AssetWithCategory } from "@/types/database";
+
+export type AccountGroup = {
+  key: string;
+  label: string;
+  icon: string;
+  isLiability: boolean;
+  accounts: AssetWithCategory[];
+  total: number;
+};
+
+export default function AccountsClient({
+  groups,
+  symbol,
+  assetCategories,
+  totalAssets,
+  totalLiabilities,
+}: {
+  groups: AccountGroup[];
+  symbol: string;
+  assetCategories: AssetCategoryRow[];
+  totalAssets: number;
+  totalLiabilities: number;
+}) {
+  const [editMode, setEditMode] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  const netTotal = totalAssets - totalLiabilities;
+
+  function fmt(n: number) {
+    return symbol + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2 });
+  }
+
+  function startEdit(account: AssetWithCategory) {
+    setEditingId(account.id);
+    setEditValue(String(account.current_value));
+  }
+
+  function handleSaveValue(id: string) {
+    const val = parseFloat(editValue);
+    if (isNaN(val) || val < 0) return;
+    startTransition(async () => {
+      await updateAssetValue(id, val);
+      setEditingId(null);
+    });
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    await deleteAsset(id);
+    setDeletingId(null);
+  }
+
+  function toggleEditMode() {
+    setEditMode((v) => !v);
+    setEditingId(null);
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Accounts</h1>
+          <p className="mt-0.5 text-sm text-gray-500">Track what you own and owe.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleEditMode}
+            className={`w-11 h-11 flex items-center justify-center rounded-xl text-sm font-medium transition ${
+              editMode
+                ? "bg-indigo-100 text-indigo-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {editMode ? <Check className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
+          </button>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Summary bar */}
+      <div className="grid grid-cols-3 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-3 text-center border-r border-gray-100">
+          <p className="text-xs text-gray-400 mb-0.5">Assets</p>
+          <p className="text-sm font-bold text-indigo-600">{fmt(totalAssets)}</p>
+        </div>
+        <div className="p-3 text-center border-r border-gray-100">
+          <p className="text-xs text-gray-400 mb-0.5">Liabilities</p>
+          <p className="text-sm font-bold text-rose-500">-{fmt(totalLiabilities)}</p>
+        </div>
+        <div className="p-3 text-center">
+          <p className="text-xs text-gray-400 mb-0.5">Total</p>
+          <p className={`text-sm font-bold ${netTotal >= 0 ? "text-gray-900" : "text-rose-500"}`}>
+            {netTotal >= 0 ? "" : "-"}{fmt(netTotal)}
+          </p>
+        </div>
+      </div>
+
+      {/* Account groups */}
+      {groups.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+          <p className="text-sm text-gray-400">No accounts yet. Tap <strong>+</strong> to add one.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {groups.map((group) => (
+            <div
+              key={group.key}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+            >
+              {/* Group header */}
+              <div
+                className={`flex items-center justify-between px-4 py-3 border-b border-gray-100 ${
+                  group.isLiability ? "bg-rose-50" : "bg-gray-50"
+                }`}
+              >
+                <span className="text-sm font-semibold text-gray-700">
+                  {group.icon} {group.label}
+                </span>
+                <span
+                  className={`text-sm font-bold ${
+                    group.isLiability ? "text-rose-500" : "text-gray-900"
+                  }`}
+                >
+                  {group.isLiability ? "-" : ""}{fmt(group.total)}
+                </span>
+              </div>
+
+              {/* Account rows */}
+              <div className="divide-y divide-gray-50">
+                {group.accounts.map((account) => (
+                  <div key={account.id} className="flex items-center gap-3 px-4 py-3">
+                    {/* Delete button (edit mode) */}
+                    {editMode && (
+                      <button
+                        onClick={() => handleDelete(account.id)}
+                        disabled={deletingId === account.id}
+                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-rose-500 hover:bg-rose-600 text-white transition"
+                      >
+                        {deletingId === account.id
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <X className="h-3 w-3" />}
+                      </button>
+                    )}
+
+                    {/* Name */}
+                    <p className="flex-1 text-sm text-gray-800">{account.name}</p>
+
+                    {/* Value — editable in edit mode */}
+                    {editMode && editingId === account.id ? (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+                            {symbol}
+                          </span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveValue(account.id);
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                            className="w-28 pl-5 pr-2 py-1.5 rounded-lg border border-indigo-400 text-sm text-right focus:outline-none"
+                            autoFocus
+                          />
+                        </div>
+                        <button
+                          onClick={() => handleSaveValue(account.id)}
+                          className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => editMode && startEdit(account)}
+                        disabled={!editMode}
+                        className={`text-sm font-medium shrink-0 ${
+                          group.isLiability ? "text-rose-500" : "text-gray-900"
+                        } ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
+                      >
+                        {group.isLiability ? "-" : ""}
+                        {fmt(Number(account.current_value))}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <AddAssetSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        currencySymbol={symbol}
+        assetCategories={assetCategories}
+      />
+    </div>
+  );
+}

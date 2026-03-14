@@ -18,6 +18,7 @@ export interface Transaction {
   id: string;
   user_id: string;
   category_id: string;
+  account_id: string | null;
   type: TransactionType;
   amount: number;
   description: string | null;
@@ -30,15 +31,29 @@ export interface TransactionWithCategory extends Transaction {
   category: Category;
 }
 
+export interface AssetCategoryRow {
+  id: string;
+  user_id: string | null;
+  name: string;
+  icon: string;
+  is_liability: boolean;
+  created_at: string;
+}
+
 export interface Asset {
   id: string;
   user_id: string;
   name: string;
-  category: AssetCategory;
+  category: AssetCategory; // legacy field — kept for backwards compat
+  asset_category_id: string | null;
   current_value: number;
   interest_rate: number | null; // annual %, e.g. 3.5 means 3.5%
   created_at: string;
   updated_at: string;
+}
+
+export interface AssetWithCategory extends Asset {
+  assetCategory: Pick<AssetCategoryRow, "id" | "name" | "icon" | "is_liability"> | null;
 }
 
 export interface AssetSnapshot {

@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ArrowLeftRight, Wallet, Settings, LogOut } from "lucide-react";
-import { logout } from "../actions";
+import { LayoutDashboard, Wallet, MoreHorizontal } from "lucide-react";
 
 const links = [
-  { href: "/dashboard",              label: "Dashboard",    icon: LayoutDashboard },
-  { href: "/dashboard/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/dashboard/assets",       label: "Assets",       icon: Wallet },
-  { href: "/dashboard/settings",     label: "Settings",     icon: Settings },
+  { href: "/dashboard",          label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/accounts", label: "Accounts",  icon: Wallet },
+  { href: "/dashboard/settings", label: "More",      icon: MoreHorizontal },
 ];
 
 export default function Sidebar({ email }: { email: string }) {
@@ -41,26 +39,20 @@ export default function Sidebar({ email }: { email: string }) {
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-gray-100 space-y-1">
+        <div className="px-4 py-4 border-t border-gray-100">
           <p className="px-3 text-xs text-gray-400 truncate">{email}</p>
-          <form action={logout}>
-            <button type="submit" className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition">
-              <LogOut className="h-4 w-4 shrink-0" />
-              Sign out
-            </button>
-          </form>
         </div>
       </aside>
 
       {/* ── Mobile bottom nav ── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-10 bg-white border-t border-gray-200 flex">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-10 bg-white border-t border-gray-200 flex pb-6 supports-[padding:max(0px)]:pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition ${
+              className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition ${
                 active ? "text-indigo-600" : "text-gray-400 hover:text-gray-700"
               }`}
             >
@@ -69,12 +61,6 @@ export default function Sidebar({ email }: { email: string }) {
             </Link>
           );
         })}
-        <form action={logout} className="flex-1">
-          <button type="submit" className="w-full flex flex-col items-center gap-1 py-2.5 text-xs font-medium text-gray-400 hover:text-red-500 transition">
-            <LogOut className="h-5 w-5" />
-            Out
-          </button>
-        </form>
       </nav>
     </>
   );

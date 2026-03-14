@@ -17,7 +17,7 @@ export async function addAsset(
   if (!user) return { error: "Not authenticated.", success: false };
 
   const name = (formData.get("name") as string).trim();
-  const category = formData.get("category") as string;
+  const asset_category_id = (formData.get("asset_category_id") as string) || null;
   const current_value = parseFloat(formData.get("current_value") as string);
   const rateRaw = formData.get("interest_rate") as string;
   const interest_rate = rateRaw && rateRaw !== "" ? parseFloat(rateRaw) : null;
@@ -26,9 +26,29 @@ export async function addAsset(
   if (isNaN(current_value) || current_value < 0)
     return { error: "Value must be 0 or more.", success: false };
 
+  // Derive legacy category field from asset_category
+  let category = "other";
+  if (asset_category_id) {
+    const { data: cat } = await supabase
+      .from("asset_categories")
+      .select("name, is_liability")
+      .eq("id", asset_category_id)
+      .single();
+    if (cat) {
+      if (cat.is_liability) category = "liability";
+      else {
+        const nameMap: Record<string, string> = {
+          "Cash / Bank": "cash", "Investment": "investment",
+          "Property": "property", "Vehicle": "vehicle", "Other": "other",
+        };
+        category = nameMap[cat.name] ?? "other";
+      }
+    }
+  }
+
   const { data: asset, error } = await supabase
     .from("assets")
-    .insert({ user_id: user.id, name, category, current_value, interest_rate })
+    .insert({ user_id: user.id, name, category, asset_category_id, current_value, interest_rate })
     .select()
     .single();
 
@@ -45,6 +65,7 @@ export async function addAsset(
   });
 
   revalidatePath("/dashboard/assets");
+  revalidatePath("/dashboard/accounts");
   revalidatePath("/dashboard");
   return { error: null, success: true };
 }
@@ -74,6 +95,7 @@ export async function updateAssetValue(assetId: string, newValue: number) {
   );
 
   revalidatePath("/dashboard/assets");
+  revalidatePath("/dashboard/accounts");
   revalidatePath("/dashboard");
 }
 
@@ -85,5 +107,6 @@ export async function deleteAsset(id: string) {
   await supabase.from("assets").delete().eq("id", id).eq("user_id", user.id);
 
   revalidatePath("/dashboard/assets");
+  revalidatePath("/dashboard/accounts");
   revalidatePath("/dashboard");
 }

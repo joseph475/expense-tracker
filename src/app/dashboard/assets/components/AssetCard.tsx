@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import { Pencil, Trash2, Check, X, TrendingUp } from "lucide-react";
-import type { Asset } from "@/types/database";
+import type { AssetWithCategory } from "@/types/database";
 import { updateAssetValue, deleteAsset } from "../actions";
 
-const CATEGORY_ICONS: Record<string, string> = {
+const LEGACY_ICONS: Record<string, string> = {
   cash: "🏦", investment: "📈", property: "🏠", vehicle: "🚗", liability: "💳", other: "📦",
 };
 
-const LIABILITIES = new Set(["liability"]);
-
-function calcProjected(asset: Asset): { projected: number; earned: number; daily: number } {
+function calcProjected(asset: AssetWithCategory): { projected: number; earned: number; daily: number } {
   if (!asset.interest_rate || asset.interest_rate <= 0) {
     return { projected: Number(asset.current_value), earned: 0, daily: 0 };
   }
@@ -37,7 +35,7 @@ export default function AssetCard({
   asset,
   currencySymbol,
 }: {
-  asset: Asset;
+  asset: AssetWithCategory;
   currencySymbol: string;
 }) {
   const [editing, setEditing] = useState(false);
@@ -47,7 +45,9 @@ export default function AssetCard({
 
   const { projected, earned, daily } = calcProjected(asset);
   const hasInterest = !!asset.interest_rate && asset.interest_rate > 0;
-  const isLiability = LIABILITIES.has(asset.category);
+  const isLiability = asset.assetCategory?.is_liability ?? asset.category === "liability";
+  const categoryIcon = asset.assetCategory?.icon ?? LEGACY_ICONS[asset.category] ?? "📦";
+  const categoryName = asset.assetCategory?.name ?? asset.category;
 
   async function handleSave() {
     const val = parseFloat(newValue);
@@ -78,12 +78,12 @@ export default function AssetCard({
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
       {/* Top row */}
       <div className="flex items-center gap-3">
-        <span className="text-2xl shrink-0">{CATEGORY_ICONS[asset.category]}</span>
+        <span className="text-2xl shrink-0">{categoryIcon}</span>
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">{asset.name}</p>
-          <p className="text-xs text-gray-400 capitalize mt-0.5">
-            {asset.category}
+          <p className="text-xs text-gray-400 mt-0.5">
+            {categoryName}
             {hasInterest && ` · ${asset.interest_rate}% p.a.`}
           </p>
         </div>

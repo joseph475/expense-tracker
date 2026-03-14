@@ -55,23 +55,25 @@ export default function SettingsForm({ currentCode }: { currentCode: string }) {
 
       {/* Currency picker sheet */}
       {sheetOpen && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setSheetOpen(false)} />
-          <div className="fixed z-50 inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center">
-            <div className="bg-white w-full rounded-t-2xl md:rounded-2xl md:max-w-sm shadow-xl max-h-[75dvh] flex flex-col">
-
-              <div className="flex justify-center pt-3 md:hidden shrink-0">
-                <div className="w-10 h-1 rounded-full bg-gray-300" />
-              </div>
-
+        <div className={`${sheetOpen ? 'block' : 'hidden'}`}>
+          <div
+            className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+              sheetOpen ? 'opacity-100' : 'opacity-0'
+            }`}
+            onClick={() => setSheetOpen(false)}
+          />
+          <div className={`fixed z-[60] inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
+            sheetOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            <div className="h-full flex flex-col">
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-                <h2 className="text-base font-semibold text-gray-900">Select Currency</h2>
-                <button onClick={() => setSheetOpen(false)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition">
-                  <X className="h-4 w-4" />
+                <h2 className="text-lg font-semibold text-gray-900">Select Currency</h2>
+                <button onClick={() => setSheetOpen(false)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition">
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="overflow-y-auto py-2">
+              <div className="flex-1 overflow-y-auto py-2">
                 {CURRENCIES.map((c) => {
                   const active = selected === c.code;
                   return (
@@ -93,7 +95,7 @@ export default function SettingsForm({ currentCode }: { currentCode: string }) {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );
