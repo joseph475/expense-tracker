@@ -1,26 +1,45 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { ArrowDownLeft, ArrowUpRight, Wallet, TrendingUp } from "lucide-react";
-import Link from "next/link";
 import { Suspense } from "react";
 import type { TransactionWithCategory } from "@/types/database";
 import DashboardFilterTabs from "./components/DashboardFilterTabs";
 import AddTransactionButton from "./components/AddTransactionButton";
 import CalendarView from "./components/CalendarView";
 import RecentTransactions from "./components/RecentTransactions";
+import DashboardStats from "./components/DashboardStats";
+import LoadingSpinner from "./components/LoadingSpinner";
+import {
+  getCachedUserSession,
+  getCachedUserSettings,
+  getCachedCategories,
+  getCachedAssets,
+  getCachedAssetValues,
+  getTransactions,
+  calculateNetWorth,
+} from "@/lib/data-fetching";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ view?: string; date?: string; month?: string; search?: string; accounts?: string }>;
-}) {
+// Enable static generation for better performance
+export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Revalidate every minute
+
+interface DashboardPageProps {
+  searchParams: Promise<{ 
+    view?: string; 
+    date?: string; 
+    month?: string; 
+    search?: string; 
+    accounts?: string 
+  }>;
+}
+
+// Separate component for async data fetching
+async function DashboardContent({ searchParams }: DashboardPageProps) {
   const { view = "today", date, month, search, accounts } = await searchParams;
 
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
+  // Get user session (cached)
+  const user = await getCachedUserSession();
   if (!user) redirect("/auth");
 
+  // Calculate date range
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
@@ -47,55 +66,31 @@ export default async function DashboardPage({
     const ym = month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const [ymYear, ymMonth] = ym.split("-").map(Number);
     const monthStart = new Date(ymYear, ymMonth - 1, 1);
-    const monthEnd = new Date(ymYear, ymMonth, 0); // last day of month
+    const monthEnd = new Date(ymYear, ymMonth, 0);
     dateFrom = monthStart.toISOString().split("T")[0];
     const monthEndStr = monthEnd.toISOString().split("T")[0];
     dateTo = monthEndStr < todayStr ? monthEndStr : todayStr;
   }
 
+  // Parallel data fetching with caching
   const [
-    { data: transactions },
-    { data: assets },
-    { data: settings },
-    { data: categories },
-    { data: accountAssets },
+    transactions,
+    assets,
+    settings,
+    categories,
+    accountAssets,
+    assetValues,
   ] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select(`
-        *,
-        category:categories(*),
-        account:assets!account_id(id, name, asset_categories(name, icon, is_liability)),
-        to_account:assets!to_account_id(id, name, asset_categories(name, icon, is_liability))
-      `)
-      .eq("user_id", user!.id)
-      .gte("date", dateFrom)
-      .lte("date", dateTo)
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("assets")
-      .select("current_value, category")
-      .eq("user_id", user!.id),
-    supabase
-      .from("user_settings")
-      .select("currency_symbol")
-      .eq("user_id", user!.id)
-      .single(),
-    supabase
-      .from("categories")
-      .select("*")
-      .or(`user_id.is.null,user_id.eq.${user!.id}`)
-      .order("name"),
-    supabase
-      .from("assets")
-      .select("*")
-      .eq("user_id", user!.id)
-      .order("name"),
+    getTransactions(user.id, dateFrom, dateTo),
+    getCachedAssets(user.id),
+    getCachedUserSettings(user.id),
+    getCachedCategories(user.id),
+    getCachedAssets(user.id), // For account filtering
+    getCachedAssetValues(user.id),
   ]);
 
   const symbol = settings?.currency_symbol ?? "$";
-  let allTx = (transactions ?? []) as TransactionWithCategory[];
+  let allTx = transactions;
 
   // Apply search filter
   if (search) {
@@ -119,26 +114,10 @@ export default async function DashboardPage({
     }
   }
 
-  const totalIncome = allTx
-    .filter((t) => t.type === "income")
-    .reduce((s, t) => s + Number(t.amount), 0);
+  // Calculate net worth using cached function
+  const netWorth = calculateNetWorth(assetValues);
 
-  const totalExpenses = allTx
-    .filter((t) => t.type === "expense")
-    .reduce((s, t) => s + Number(t.amount), 0);
-
-  const netBalance = totalIncome - totalExpenses;
-
-  const allAssets = assets ?? [];
-  const totalAssets = allAssets
-    .filter((a) => a.category !== "liability")
-    .reduce((s, a) => s + Number(a.current_value), 0);
-  const totalLiabilities = allAssets
-    .filter((a) => a.category === "liability")
-    .reduce((s, a) => s + Number(a.current_value), 0);
-  const netWorth = totalAssets - totalLiabilities;
-
-  // Top 5 expense categories for the period
+  // Top 5 expense categories for the period (memoized)
   const categoryTotals = allTx
     .filter((t) => t.type === "expense" && t.category_id && t.category)
     .reduce<Record<string, { name: string; icon: string; total: number }>>(
@@ -155,81 +134,61 @@ export default async function DashboardPage({
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
-  const recentTx = allTx.slice(0, 5);
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Filter tabs */}
-      <div className="bg-white border-b border-gray-100">
-        <Suspense fallback={null}>
-          <DashboardFilterTabs assets={accountAssets ?? []} />
-        </Suspense>
-      </div>
-
-      {/* Add transaction FAB */}
-      <AddTransactionButton categories={categories ?? []} assets={accountAssets ?? []} currencySymbol={symbol} />
-
-      {/* Calendar View */}
-      {view === "calendar" ? (
-        <CalendarView
-          transactions={allTx}
-          symbol={symbol}
-          currentDate={date}
-        />
-      ) : (
-        <>
-          {/* Summary section */}
-          <div className="bg-white px-3 py-3 border-b border-gray-100">
-            <div className="grid grid-cols-3 gap-3">
-              {/* Income */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-0.5">
-                  <ArrowDownLeft className="h-3.5 w-3.5 text-green-600 mr-1" />
-                  <span className="text-xs font-medium text-gray-600">Income</span>
-                </div>
-                <p className="text-sm font-bold text-green-600">{symbol}{totalIncome.toFixed(2)}</p>
-              </div>
-
-              {/* Expenses */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-0.5">
-                  <ArrowUpRight className="h-3.5 w-3.5 text-red-500 mr-1" />
-                  <span className="text-xs font-medium text-gray-600">Expenses</span>
-                </div>
-                <p className="text-sm font-bold text-red-500">{symbol}{totalExpenses.toFixed(2)}</p>
-              </div>
-
-              {/* Total (Net Balance) */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-0.5">
-                  <TrendingUp className={`h-3.5 w-3.5 mr-1 ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`} />
-                  <span className="text-xs font-medium text-gray-600">Total</span>
-                </div>
-                <p className={`text-sm font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {netBalance >= 0 ? '+' : ''}{symbol}{netBalance.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-
-      {/* Recent transactions */}
-      {recentTx.length > 0 && (
-        <RecentTransactions transactions={recentTx} currencySymbol={symbol} />
-      )}
-
-      {/* Empty state */}
-      {allTx.length === 0 && (
-        <div className="bg-white px-4 py-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-            <Wallet className="h-8 w-8 text-gray-400" />
-          </div>
-          <p className="text-sm text-gray-500 font-medium mb-1">No transactions for this period</p>
-          <p className="text-xs text-gray-400">Tap the + button to add your first transaction</p>
+      <div className="max-w-md mx-auto bg-white min-h-screen">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+          <DashboardFilterTabs assets={accountAssets} />
         </div>
-      )}
-        </>
-      )}
+
+        <div className="p-4 space-y-6">
+          {/* Stats Section with Suspense */}
+          <Suspense fallback={<LoadingSpinner size="sm" />}>
+            <DashboardStats 
+              transactions={allTx} 
+              netWorth={netWorth} 
+              symbol={symbol} 
+            />
+          </Suspense>
+
+          {/* Main Content */}
+          {view === "calendar" ? (
+            <Suspense fallback={<LoadingSpinner />}>
+              <CalendarView
+                transactions={allTx}
+                symbol={symbol}
+                currentDate={date || todayStr}
+              />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<LoadingSpinner />}>
+              <RecentTransactions
+                transactions={allTx}
+                currencySymbol={symbol}
+              />
+            </Suspense>
+          )}
+        </div>
+
+        {/* Floating Action Button */}
+        <AddTransactionButton
+          categories={categories}
+          assets={assets}
+          currencySymbol={symbol}
+        />
+      </div>
     </div>
+  );
+}
+
+export default async function DashboardPage(props: DashboardPageProps) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    }>
+      <DashboardContent {...props} />
+    </Suspense>
   );
 }

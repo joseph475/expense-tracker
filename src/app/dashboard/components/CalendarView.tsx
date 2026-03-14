@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { TransactionWithCategory } from "@/types/database";
 
@@ -17,15 +17,19 @@ export default function CalendarView({ transactions, symbol, currentDate }: Cale
     return new Date(date.getFullYear(), date.getMonth(), 1);
   });
 
-  // Get transactions grouped by date
-  const transactionsByDate = transactions.reduce<Record<string, TransactionWithCategory[]>>((acc, tx) => {
-    if (!acc[tx.date]) acc[tx.date] = [];
-    acc[tx.date].push(tx);
-    return acc;
-  }, {});
+  // Memoize transactions grouped by date
+  const transactionsByDate = useMemo(() => {
+    return transactions.reduce<Record<string, TransactionWithCategory[]>>((acc, tx) => {
+      if (!acc[tx.date]) acc[tx.date] = [];
+      acc[tx.date].push(tx);
+      return acc;
+    }, {});
+  }, [transactions]);
 
-  // Get selected date transactions
-  const selectedTransactions = selectedDate ? transactionsByDate[selectedDate] || [] : [];
+  // Memoize selected date transactions
+  const selectedTransactions = useMemo(() => {
+    return selectedDate ? transactionsByDate[selectedDate] || [] : [];
+  }, [selectedDate, transactionsByDate]);
 
   // Calendar helpers - use local date formatting to avoid timezone issues
   const today = (() => {

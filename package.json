@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "ANALYZE=true next build",
+    "lighthouse": "npx lighthouse http://localhost:3000 --view",
+    "perf": "npm run build && npm run lighthouse"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
