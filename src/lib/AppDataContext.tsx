@@ -23,7 +23,13 @@ function lsSave(key: string, data: unknown) {
   try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
 }
 
-function uid() { return crypto.randomUUID(); }
+function uid() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 function now() { return new Date().toISOString(); }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
