@@ -215,32 +215,38 @@ export default function CalendarView({ transactions, symbol, currentDate }: Cale
 
               <div className="flex-1 overflow-y-auto">
                 {selectedTransactions.length > 0 ? (
-                  <div className="p-4 space-y-3">
-                    {selectedTransactions.map((tx) => (
-                      <div key={tx.id} className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0">
-                          <span className="text-lg">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-50 bg-gray-50">
+                        <th className="text-left px-4 py-2 text-xs font-medium text-gray-500 w-8"></th>
+                        <th className="text-left px-2 py-2 text-xs font-medium text-gray-500">Category</th>
+                        <th className="text-left px-2 py-2 text-xs font-medium text-gray-500">Description</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedTransactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-gray-100/50 hover:bg-gray-50">
+                          <td className="px-4 py-2 text-base leading-none">
                             {tx.type === "transfer" ? "↔️" : tx.category?.icon || "💰"}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {tx.description || (tx.type === "transfer" ? "Transfer" : tx.category?.name || "Transaction")}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {tx.type === "transfer" ? "Transfer" : tx.category?.name || "Transaction"}
-                          </p>
-                        </div>
-                        <span className={`text-sm font-semibold ${
-                          tx.type === "income" ? "text-green-600" :
-                          tx.type === "transfer" ? "text-blue-600" :
-                          "text-red-500"
-                        }`}>
-                          {tx.type === "income" ? "+" : tx.type === "transfer" ? "↔" : "-"}{symbol}{Number(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                          </td>
+                          <td className="px-2 py-2 text-gray-700 whitespace-nowrap">
+                            {tx.type === "transfer" ? "Transfer" : tx.category?.name || "—"}
+                          </td>
+                          <td className="px-2 py-2 text-gray-500 truncate max-w-30">
+                            {tx.description || "—"}
+                          </td>
+                          <td className={`px-4 py-2 text-right font-semibold whitespace-nowrap ${
+                            tx.type === "income" ? "text-green-600" :
+                            tx.type === "transfer" ? "text-blue-600" :
+                            "text-red-500"
+                          }`}>
+                            {tx.type === "income" ? "+" : tx.type === "transfer" ? "↔" : "-"}{symbol}{Number(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 ) : (
                   <div className="flex-1 flex items-center justify-center p-8">
                     <div className="text-center">

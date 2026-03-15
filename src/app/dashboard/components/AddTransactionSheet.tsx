@@ -305,22 +305,27 @@ export default function AddTransactionSheet({
                 <div className="p-4 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900">Select Category</h3>
                 </div>
-                <div className="overflow-y-auto max-h-[50vh] p-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {filteredCategories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCategory(cat);
-                          setShowCategoryPicker(false);
-                        }}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition text-center"
-                      >
-                        <span className="text-2xl">{cat.icon}</span>
-                        <span className="text-xs font-medium text-gray-900 leading-tight">{cat.name}</span>
-                      </button>
-                    ))}
+                <div className="overflow-y-auto max-h-[50vh] p-4 space-y-4">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                      {type === "income" ? "Income" : "Expense"} Categories
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {filteredCategories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat);
+                            setShowCategoryPicker(false);
+                          }}
+                          className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition text-center"
+                        >
+                          <span className="text-2xl">{cat.icon}</span>
+                          <span className="text-xs font-medium text-gray-900 leading-tight">{cat.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
             </div>

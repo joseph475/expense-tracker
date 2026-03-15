@@ -143,7 +143,7 @@ export default function AccountsClient({
           {groups.map((group) => (
             <div key={group.key} className="bg-white border-b border-gray-100">
               {/* Group header */}
-              <div className={`grid grid-cols-3 items-center gap-4 px-4 py-3 border-b border-gray-100 ${
+              <div className={`grid grid-cols-3 items-center gap-4 px-4 py-2 border-b border-gray-100 ${
                 group.isLiability ? "bg-rose-50" : "bg-gray-50"
               }`}>
                 <span className="text-sm font-semibold text-gray-700">
@@ -170,9 +170,9 @@ export default function AccountsClient({
               </div>
 
               {/* Account rows */}
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-50">
                 {group.accounts.map((account) => (
-                  <div key={account.id} className="grid grid-cols-3 items-center gap-4 px-4 py-3">
+                  <div key={account.id} className="grid grid-cols-3 items-center gap-4 px-4 py-2">
                     {/* Account Name */}
                     <div className="flex items-center gap-3">
                       {/* Delete button (edit mode) */}
