@@ -170,7 +170,7 @@ export default function CalendarView({ transactions, symbol, currentDate }: Cale
                       <div className={`font-medium ${
                         dayTotal >= 0 ? 'text-green-600' : 'text-red-500'
                       }`}>
-                        {dayTotal >= 0 ? '+' : ''}{symbol}{Math.abs(dayTotal).toFixed(0)}
+                        {dayTotal >= 0 ? '+' : ''}{symbol}{Math.abs(dayTotal).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </div>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export default function CalendarView({ transactions, symbol, currentDate }: Cale
                           tx.type === "transfer" ? "text-blue-600" :
                           "text-red-500"
                         }`}>
-                          {tx.type === "income" ? "+" : tx.type === "transfer" ? "↔" : "-"}{symbol}{Number(tx.amount).toFixed(2)}
+                          {tx.type === "income" ? "+" : tx.type === "transfer" ? "↔" : "-"}{symbol}{Number(tx.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     ))}

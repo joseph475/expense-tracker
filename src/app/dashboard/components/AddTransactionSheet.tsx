@@ -135,16 +135,16 @@ export default function AddTransactionSheet({
   }
 
   return (
-    <div className={`${open ? 'block' : 'hidden'}`}>
+    <>
       <div
         className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? 'opacity-100' : 'opacity-0'
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
-      <div className={`fixed z-[60] inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
-        open ? 'translate-x-0' : 'translate-x-full'
+      <div className={`fixed z-60 inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
+        open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
       }`}>
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 shrink-0">
@@ -290,9 +290,18 @@ export default function AddTransactionSheet({
           </form>
 
           {/* Category Picker Bottom Sheet */}
-          {showCategoryPicker && (
-            <div className="fixed inset-0 z-[70] bg-black/40" onClick={() => setShowCategoryPicker(false)}>
-              <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
+              showCategoryPicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setShowCategoryPicker(false)}
+          >
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+                showCategoryPicker ? "translate-y-0" : "translate-y-full"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
                 <div className="p-4 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900">Select Category</h3>
                 </div>
@@ -314,14 +323,22 @@ export default function AddTransactionSheet({
                     ))}
                   </div>
                 </div>
-              </div>
             </div>
-          )}
+          </div>
 
           {/* Account Picker Bottom Sheet */}
-          {showAccountPicker && (
-            <div className="fixed inset-0 z-[70] bg-black/40" onClick={() => setShowAccountPicker(false)}>
-              <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
+              showAccountPicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setShowAccountPicker(false)}
+          >
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+                showAccountPicker ? "translate-y-0" : "translate-y-full"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
                 <div className="p-4 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900">Select Account</h3>
                 </div>
@@ -384,139 +401,142 @@ export default function AddTransactionSheet({
                     </div>
                   ))}
                 </div>
-              </div>
             </div>
-          )}
+          </div>
 
           {/* To Account Picker Bottom Sheet */}
-          {showToAccountPicker && (
-            <div className="fixed inset-0 z-[70] bg-black/40" onClick={() => setShowToAccountPicker(false)}>
-              <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">Select Destination Account</h3>
-                </div>
-                <div className="overflow-y-auto max-h-[50vh] p-4">
-                  {(() => {
-                    // Group all assets by category (no filtering for "to" account)
-                    const groupedAssets = assets.reduce<Record<string, Asset[]>>((acc, a) => {
-                      if (!acc[a.category]) acc[a.category] = [];
-                      acc[a.category].push(a);
-                      return acc;
-                    }, {});
-
-                    // Sort categories: non-liability first, then liability
-                    const sortedEntries = Object.entries(groupedAssets).sort(([catA], [catB]) => {
-                      const isLiabilityA = catA === "liability";
-                      const isLiabilityB = catB === "liability";
-
-                      if (!isLiabilityA && isLiabilityB) return -1;
-                      if (isLiabilityA && !isLiabilityB) return 1;
-
-                      return catA.localeCompare(catB);
-                    });
-
-                    return sortedEntries;
-                  })().map(([cat, group]) => (
-                    <div key={cat} className="mb-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-                        {CATEGORY_LABELS[cat as AssetCategory] ?? cat}
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {group.map((account) => (
-                          <button
-                            key={account.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedToAccount(account);
-                              setShowToAccountPicker(false);
-                            }}
-                            className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
-                              selectedAccount?.id === account.id
-                                ? "bg-gray-200 cursor-not-allowed opacity-50"
-                                : "bg-gray-50 hover:bg-gray-100"
-                            }`}
-                            disabled={selectedAccount?.id === account.id}
-                          >
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                              <span className="text-sm font-medium text-indigo-600">
-                                {account.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <span className="text-xs font-medium text-gray-900 leading-tight">{account.name}</span>
-                          </button>
-                        ))}
-                      </div>
+          <div
+            className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
+              showToAccountPicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setShowToAccountPicker(false)}
+          >
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+                showToAccountPicker ? "translate-y-0" : "translate-y-full"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">Select Destination Account</h3>
+              </div>
+              <div className="overflow-y-auto max-h-[50vh] p-4">
+                {(() => {
+                  const groupedAssets = assets.reduce<Record<string, Asset[]>>((acc, a) => {
+                    if (!acc[a.category]) acc[a.category] = [];
+                    acc[a.category].push(a);
+                    return acc;
+                  }, {});
+                  const sortedEntries = Object.entries(groupedAssets).sort(([catA], [catB]) => {
+                    const isLiabilityA = catA === "liability";
+                    const isLiabilityB = catB === "liability";
+                    if (!isLiabilityA && isLiabilityB) return -1;
+                    if (isLiabilityA && !isLiabilityB) return 1;
+                    return catA.localeCompare(catB);
+                  });
+                  return sortedEntries;
+                })().map(([cat, group]) => (
+                  <div key={cat} className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                      {CATEGORY_LABELS[cat as AssetCategory] ?? cat}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {group.map((account) => (
+                        <button
+                          key={account.id}
+                          type="button"
+                          onClick={() => { setSelectedToAccount(account); setShowToAccountPicker(false); }}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
+                            selectedAccount?.id === account.id
+                              ? "bg-gray-200 cursor-not-allowed opacity-50"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
+                          disabled={selectedAccount?.id === account.id}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-indigo-600">
+                              {account.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900 leading-tight">{account.name}</span>
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Date Picker Bottom Sheet */}
-          {showDatePicker && (
-            <div className="fixed inset-0 z-70 bg-black/40" onClick={() => setShowDatePicker(false)}>
-              <div
-                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">Select Date</h3>
+          <div
+            className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
+              showDatePicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setShowDatePicker(false)}
+          >
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden transform transition-transform duration-300 ease-out ${
+                showDatePicker ? "translate-y-0" : "translate-y-full"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">Select Date</h3>
+              </div>
+              <div className="p-4 pb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPickerMonthStr((m) => shiftMonth(m, -1))}
+                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <span className="text-base font-semibold text-gray-900">{formatPickerMonth(pickerMonthStr)}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPickerMonthStr((m) => shiftMonth(m, 1))}
+                    disabled={pickerMonthStr >= today().slice(0, 7)}
+                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
                 </div>
-                <div className="p-4 pb-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setPickerMonthStr((m) => shiftMonth(m, -1))}
-                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <span className="text-base font-semibold text-gray-900">{formatPickerMonth(pickerMonthStr)}</span>
-                    <button
-                      type="button"
-                      onClick={() => setPickerMonthStr((m) => shiftMonth(m, 1))}
-                      disabled={pickerMonthStr >= today().slice(0, 7)}
-                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-7 mb-1">
-                    {DAY_NAMES.map((d) => (
-                      <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-y-1">
-                    {buildCalendarDays(pickerMonthStr).map((dateStr, i) => {
-                      if (!dateStr) return <div key={i} />;
-                      const isFuture = dateStr > today();
-                      const isSelected = dateStr === selectedDate;
-                      return (
-                        <button
-                          key={dateStr}
-                          type="button"
-                          disabled={isFuture}
-                          onClick={() => { setSelectedDate(dateStr); setShowDatePicker(false); }}
-                          className={`mx-auto w-9 h-9 rounded-full text-sm font-medium transition flex items-center justify-center ${
-                            isSelected
-                              ? "bg-indigo-600 text-white"
-                              : isFuture
-                              ? "text-gray-300 pointer-events-none"
-                              : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                          }`}
-                        >
-                          {Number(dateStr.split("-")[2])}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="grid grid-cols-7 mb-1">
+                  {DAY_NAMES.map((d) => (
+                    <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-y-1">
+                  {buildCalendarDays(pickerMonthStr).map((dateStr, i) => {
+                    if (!dateStr) return <div key={i} />;
+                    const isFuture = dateStr > today();
+                    const isSelected = dateStr === selectedDate;
+                    return (
+                      <button
+                        key={dateStr}
+                        type="button"
+                        disabled={isFuture}
+                        onClick={() => { setSelectedDate(dateStr); setShowDatePicker(false); }}
+                        className={`mx-auto w-9 h-9 rounded-full text-sm font-medium transition flex items-center justify-center ${
+                          isSelected
+                            ? "bg-indigo-600 text-white"
+                            : isFuture
+                            ? "text-gray-300 pointer-events-none"
+                            : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                        }`}
+                      >
+                        {Number(dateStr.split("-")[2])}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

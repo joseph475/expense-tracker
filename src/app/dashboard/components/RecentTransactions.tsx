@@ -134,7 +134,7 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
                   t.type === "transfer" ? "text-blue-600" :
                   "text-red-500"
                 }`}>
-                  {t.type === "income" ? "+" : t.type === "transfer" ? "↔" : "-"}{currencySymbol}{Number(t.amount).toFixed(2)}
+                  {t.type === "income" ? "+" : t.type === "transfer" ? "↔" : "-"}{currencySymbol}{Number(t.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </button>
             ))}

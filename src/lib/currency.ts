@@ -17,7 +17,7 @@ export const CURRENCIES = [
 ];
 
 export function formatAmount(amount: number, symbol: string): string {
-  return `${symbol}${amount.toFixed(2)}`;
+  return `${symbol}${Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatCurrency(amount: number, currencyCode: string): string {

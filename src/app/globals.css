@@ -12,3 +12,9 @@ button,
 a {
   touch-action: manipulation;
 }
+
+/* Prevent recharts SVG from blocking page scroll on mobile */
+.recharts-wrapper,
+.recharts-wrapper svg {
+  touch-action: pan-y;
+}

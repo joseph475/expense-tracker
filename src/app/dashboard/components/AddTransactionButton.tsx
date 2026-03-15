@@ -10,7 +10,9 @@ export default function AddTransactionButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-[6.5rem] right-4 z-30 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center transition md:hidden"
+        className={`fixed bottom-26 right-4 z-30 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center transition md:hidden ${
+          open ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
         aria-label="Add Transaction"
       >
         <Plus className="h-6 w-6" />

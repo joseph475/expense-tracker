@@ -19,11 +19,22 @@ export default function TransactionDetailsModal({
   const { transactions } = useAppData();
   const transaction = transactionId ? transactions.find(t => t.id === transactionId) ?? null : null;
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm">
-      <div className="fixed inset-0 z-[60] bg-white">
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Panel — slides from right */}
+      <div
+        className={`fixed inset-0 z-60 bg-white transform transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 shrink-0">
@@ -56,13 +67,12 @@ export default function TransactionDetailsModal({
                     "text-red-500"
                   }`}>
                     {transaction.type === "income" ? "+" : transaction.type === "transfer" ? "" : "-"}
-                    {currencySymbol}{Number(transaction.amount).toFixed(2)}
+                    {currencySymbol}{Number(transaction.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
 
                 {/* Transaction Details */}
                 <div className="space-y-4">
-                  {/* Description */}
                   {transaction.description && (
                     <div className="bg-gray-50 rounded-lg p-3">
                       <p className="text-xs font-medium text-gray-500 mb-1">Description</p>
@@ -70,7 +80,6 @@ export default function TransactionDetailsModal({
                     </div>
                   )}
 
-                  {/* Date */}
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs font-medium text-gray-500 mb-1">Date</p>
                     <p className="text-sm text-gray-900">
@@ -83,33 +92,23 @@ export default function TransactionDetailsModal({
                     </p>
                   </div>
 
-                  {/* Account Information */}
                   {transaction.type === "transfer" ? (
                     <>
                       {transaction.account && (
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-xs font-medium text-gray-500 mb-1">From Account</p>
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {transaction.account.assetCategory?.icon || "💰"}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {transaction.account.name}
-                            </span>
+                            <span className="text-lg">{transaction.account.assetCategory?.icon || "💰"}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.account.name}</span>
                           </div>
                         </div>
                       )}
-
                       {transaction.to_account && (
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-xs font-medium text-gray-500 mb-1">To Account</p>
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {transaction.to_account.assetCategory?.icon || "💰"}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {transaction.to_account.name}
-                            </span>
+                            <span className="text-lg">{transaction.to_account.assetCategory?.icon || "💰"}</span>
+                            <span className="text-sm font-medium text-gray-900">{transaction.to_account.name}</span>
                           </div>
                         </div>
                       )}
@@ -119,18 +118,13 @@ export default function TransactionDetailsModal({
                       <div className="bg-gray-50 rounded-lg p-3">
                         <p className="text-xs font-medium text-gray-500 mb-1">Account</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">
-                            {transaction.account.assetCategory?.icon || "💰"}
-                          </span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {transaction.account.name}
-                          </span>
+                          <span className="text-lg">{transaction.account.assetCategory?.icon || "💰"}</span>
+                          <span className="text-sm font-medium text-gray-900">{transaction.account.name}</span>
                         </div>
                       </div>
                     )
                   )}
 
-                  {/* Transaction Type */}
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs font-medium text-gray-500 mb-1">Type</p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -142,7 +136,6 @@ export default function TransactionDetailsModal({
                     </span>
                   </div>
 
-                  {/* Transaction ID */}
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs font-medium text-gray-500 mb-1">Transaction ID</p>
                     <p className="text-xs font-mono text-gray-600">{transaction.id}</p>
@@ -163,6 +156,6 @@ export default function TransactionDetailsModal({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

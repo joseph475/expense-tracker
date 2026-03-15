@@ -23,15 +23,15 @@ function BottomSheet({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`${open ? 'block' : 'hidden'}`}>
+    <>
       <div
         className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? 'opacity-100' : 'opacity-0'
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
-      <div className={`fixed z-[60] inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
-        open ? 'translate-x-0' : 'translate-x-full'
+      <div className={`fixed z-60 inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
+        open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
       }`}>
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
@@ -45,7 +45,7 @@ function BottomSheet({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

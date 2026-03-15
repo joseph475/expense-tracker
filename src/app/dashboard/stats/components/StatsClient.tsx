@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { Transaction, Category } from "@/types/database";
-import PieChart from "./PieChart";
+import MiniPieChart from "./MiniPieChart";
+import BarChart from "./BarChart";
 import { ChevronDown } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 interface TransactionWithCategory extends Transaction {
   category: Category | null;
@@ -16,117 +18,87 @@ interface StatsClientProps {
 }
 
 type FilterPeriod = "month" | "year" | "all";
-type ChartType = "expense" | "income";
 
 export default function StatsClient({ transactions, categories, currencyCode }: StatsClientProps) {
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("month");
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear().toString());
-  const [activeTab, setActiveTab] = useState<ChartType>("expense");
-  
-  // Bottom sheet states
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
 
-  // Filter transactions based on selected period
+  // ── Filtered transactions for pie charts / summary ─────────────────────────
   const filteredTransactions = useMemo(() => {
-    const now = new Date();
-    
     return transactions.filter(tx => {
-      // Exclude transfers
       if (tx.type === "transfer") return false;
-      
       const txDate = new Date(tx.date);
-      
-      switch (filterPeriod) {
-        case "month":
-          const [year, month] = selectedMonth.split("-");
-          return txDate.getFullYear() === parseInt(year) && 
-                 txDate.getMonth() === parseInt(month) - 1;
-        case "year":
-          return txDate.getFullYear() === parseInt(selectedYear);
-        case "all":
-          return true;
-        default:
-          return true;
+      if (filterPeriod === "month") {
+        const [y, m] = selectedMonth.split("-");
+        return txDate.getFullYear() === parseInt(y) && txDate.getMonth() === parseInt(m) - 1;
       }
+      if (filterPeriod === "year") return txDate.getFullYear() === parseInt(selectedYear);
+      return true;
     });
   }, [transactions, filterPeriod, selectedMonth, selectedYear]);
 
-  // Calculate income data by category
-  const incomeData = useMemo(() => {
-    const incomeTransactions = filteredTransactions.filter(tx => tx.type === "income");
-    const categoryTotals = new Map<string, { name: string; value: number; color: string }>();
-    
-    incomeTransactions.forEach(tx => {
-      const categoryName = tx.category?.name || "Uncategorized";
-      const existing = categoryTotals.get(categoryName);
-      if (existing) {
-        existing.value += tx.amount;
-      } else {
-        categoryTotals.set(categoryName, {
-          name: categoryName,
-          value: tx.amount,
-          color: getRandomColor(categoryName)
-        });
-      }
-    });
-    
-    return Array.from(categoryTotals.values()).sort((a, b) => b.value - a.value);
-  }, [filteredTransactions]);
+  // ── Summary totals ─────────────────────────────────────────────────────────
+  const totalIncome = useMemo(
+    () => filteredTransactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0),
+    [filteredTransactions]
+  );
+  const totalExpense = useMemo(
+    () => filteredTransactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
+    [filteredTransactions]
+  );
+  const net = totalIncome - totalExpense;
 
-  // Calculate expense data by category
-  const expenseData = useMemo(() => {
-    const expenseTransactions = filteredTransactions.filter(tx => tx.type === "expense");
-    const categoryTotals = new Map<string, { name: string; value: number; color: string }>();
-    
-    expenseTransactions.forEach(tx => {
-      const categoryName = tx.category?.name || "Uncategorized";
-      const existing = categoryTotals.get(categoryName);
-      if (existing) {
-        existing.value += tx.amount;
-      } else {
-        categoryTotals.set(categoryName, {
-          name: categoryName,
-          value: tx.amount,
-          color: getRandomColor(categoryName)
-        });
-      }
-    });
-    
-    return Array.from(categoryTotals.values()).sort((a, b) => b.value - a.value);
-  }, [filteredTransactions]);
+  // ── Pie chart data ─────────────────────────────────────────────────────────
+  const incomeData = useMemo(() => categoryTotals(filteredTransactions.filter(t => t.type === "income")), [filteredTransactions]);
+  const expenseData = useMemo(() => categoryTotals(filteredTransactions.filter(t => t.type === "expense")), [filteredTransactions]);
 
-  // Generate available months for dropdown
+  // ── Bar chart: last 6 months ───────────────────────────────────────────────
+  const monthlyData = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const monthTxs = transactions.filter(tx => {
+        if (tx.type === "transfer") return false;
+        const td = new Date(tx.date);
+        return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth();
+      });
+      return {
+        month: d.toLocaleDateString("en-US", { month: "short" }),
+        income: monthTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0),
+        expense: monthTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
+      };
+    });
+  }, [transactions]);
+
+  // ── Top categories (expenses) with % bars ─────────────────────────────────
+  const topExpenseCategories = useMemo(() => expenseData.slice(0, 5), [expenseData]);
+  const topIncomeCategories = useMemo(() => incomeData.slice(0, 5), [incomeData]);
+
+  // ── Pickers ────────────────────────────────────────────────────────────────
   const availableMonths = useMemo(() => {
-    const months = new Set<string>();
+    const s = new Set<string>();
     transactions.forEach(tx => {
-      const date = new Date(tx.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      months.add(monthKey);
+      const d = new Date(tx.date);
+      s.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     });
-    return Array.from(months).sort().reverse();
+    return Array.from(s).sort().reverse();
   }, [transactions]);
 
-  // Generate available years for dropdown
   const availableYears = useMemo(() => {
-    const years = new Set<string>();
-    transactions.forEach(tx => {
-      const date = new Date(tx.date);
-      years.add(date.getFullYear().toString());
-    });
-    return Array.from(years).sort().reverse();
+    const s = new Set<string>();
+    transactions.forEach(tx => s.add(String(new Date(tx.date).getFullYear())));
+    return Array.from(s).sort().reverse();
   }, [transactions]);
-
-  const currentData = activeTab === "expense" ? expenseData : incomeData;
-  const currentTotal = currentData.reduce((sum, item) => sum + item.value, 0);
 
   const getMonthLabel = () => {
-    const [year, monthNum] = selectedMonth.split("-");
-    return new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const [y, m] = selectedMonth.split("-");
+    return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString("en-US", { month: "short", year: "numeric" });
   };
 
   return (
@@ -138,49 +110,19 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
         <p className="text-xs text-gray-500">Breakdown by category</p>
       </div>
 
-<div className="bg-white">
-      {/* Expense / Income tabs */}
-      <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab("expense")}
-          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            activeTab === "expense" ? "text-red-500" : "text-gray-400"
-          }`}
-        >
-          Expenses
-          {activeTab === "expense" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("income")}
-          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            activeTab === "income" ? "text-green-500" : "text-gray-400"
-          }`}
-        >
-          Income
-          {activeTab === "income" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-full" />
-          )}
-        </button>
-      </div>
-
-      {/* Period filter row */}
-      <div className="flex items-center gap-2 px-4 py-3">
-        {(["month", "year", "all"] as FilterPeriod[]).map((p) => (
+      {/* Period filter */}
+      <div className="bg-white border-b border-gray-100 flex items-center gap-2 px-4 py-3">
+        {(["month", "year", "all"] as FilterPeriod[]).map(p => (
           <button
             key={p}
             onClick={() => setFilterPeriod(p)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-              filterPeriod === p
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-100 text-gray-500"
+              filterPeriod === p ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
             }`}
           >
             {p === "month" ? "Month" : p === "year" ? "Year" : "All time"}
           </button>
         ))}
-
         {(filterPeriod === "month" || filterPeriod === "year") && (
           <>
             <div className="w-px h-4 bg-gray-200 mx-1" />
@@ -195,38 +137,81 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
         )}
       </div>
 
-      {/* Chart */}
-      <div className="px-4">
-        {currentData.length > 0 ? (
-          <PieChart data={currentData} currencyCode={currencyCode} />
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="text-3xl mb-3">📊</span>
-            <p className="text-sm font-medium text-gray-500">No {activeTab} data</p>
-            <p className="text-xs text-gray-400 mt-1">for the selected period</p>
-          </div>
-        )}
-      </div>
+      {/* Summary row */}
+      <div className="bg-white border-b border-gray-100 px-4 py-4 grid grid-cols-3 gap-2">
+        <div className="text-center">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Income</p>
+          <p className="text-sm font-bold text-green-600">{formatCurrency(totalIncome, currencyCode)}</p>
+        </div>
+        <div className="text-center border-x border-gray-100">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Expenses</p>
+          <p className="text-sm font-bold text-red-500">{formatCurrency(totalExpense, currencyCode)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Net</p>
+          <p className={`text-sm font-bold ${net >= 0 ? "text-indigo-600" : "text-red-500"}`}>
+            {net >= 0 ? "" : "-"}{formatCurrency(Math.abs(net), currencyCode)}
+          </p>
+        </div>
       </div>
 
-      {/* Month Picker Bottom Sheet */}
+      {/* Monthly bar chart */}
+      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Last 6 Months</p>
+        <BarChart data={monthlyData} currencyCode={currencyCode} />
+      </div>
+
+      {/* Dual pie charts */}
+      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">By Category</p>
+        <div className="flex justify-around">
+          <MiniPieChart data={expenseData} currencyCode={currencyCode} label="Expenses" labelColor="#ef4444" />
+          <MiniPieChart data={incomeData} currencyCode={currencyCode} label="Income" labelColor="#16a34a" />
+        </div>
+      </div>
+
+      {/* Top expense categories */}
+      {topExpenseCategories.length > 0 && (
+        <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Expenses</p>
+          <CategoryList items={topExpenseCategories} currencyCode={currencyCode} />
+        </div>
+      )}
+
+      {/* Top income categories */}
+      {topIncomeCategories.length > 0 && (
+        <div className="bg-white px-4 pt-4 pb-5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Income</p>
+          <CategoryList items={topIncomeCategories} currencyCode={currencyCode} />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {filteredTransactions.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="text-3xl mb-3">📊</span>
+          <p className="text-sm font-medium text-gray-500">No data for this period</p>
+          <p className="text-xs text-gray-400 mt-1">Add some transactions to see stats</p>
+        </div>
+      )}
+
+      {/* Month Picker */}
       {showMonthPicker && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowMonthPicker(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900">Select Month</h3>
             </div>
             <div className="overflow-y-auto max-h-72 p-4 space-y-1 pb-8">
               {availableMonths.map(month => {
-                const [year, monthNum] = month.split("-");
-                const label = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-                const isSelected = selectedMonth === month;
+                const [y, m] = month.split("-");
+                const label = new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
                 return (
                   <button
                     key={month}
                     onClick={() => { setSelectedMonth(month); setShowMonthPicker(false); }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
-                      isSelected ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      selectedMonth === month ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     {label}
@@ -238,28 +223,25 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
         </div>
       )}
 
-      {/* Year Picker Bottom Sheet */}
+      {/* Year Picker */}
       {showYearPicker && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowYearPicker(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900">Select Year</h3>
             </div>
             <div className="p-4 space-y-1 pb-8">
-              {availableYears.map(year => {
-                const isSelected = selectedYear === year;
-                return (
-                  <button
-                    key={year}
-                    onClick={() => { setSelectedYear(year); setShowYearPicker(false); }}
-                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
-                      isSelected ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {year}
-                  </button>
-                );
-              })}
+              {availableYears.map(year => (
+                <button
+                  key={year}
+                  onClick={() => { setSelectedYear(year); setShowYearPicker(false); }}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
+                    selectedYear === year ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {year}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -268,19 +250,57 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
   );
 }
 
-// Generate consistent colors for categories
-function getRandomColor(categoryName: string): string {
-  const colors = [
-    "#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6",
-    "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
-    "#14B8A6", "#F43F5E", "#8B5A2B", "#6B7280", "#DC2626"
-  ];
-  
-  // Use category name to generate consistent color
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function categoryTotals(txs: TransactionWithCategory[]) {
+  const map = new Map<string, { name: string; value: number; color: string }>();
+  txs.forEach(tx => {
+    const name = tx.category?.name || "Uncategorized";
+    const existing = map.get(name);
+    if (existing) existing.value += tx.amount;
+    else map.set(name, { name, value: tx.amount, color: getColor(name) });
+  });
+  const sorted = Array.from(map.values()).sort((a, b) => b.value - a.value);
+  return sorted.map((item, i) => ({ ...item, color: getColorByIndex(i) }));
+}
+
+function CategoryList({ items, currencyCode }: { items: { name: string; value: number; color: string }[]; currencyCode: string }) {
+  const max = items[0]?.value || 1;
+  return (
+    <div className="space-y-3">
+      {items.map(item => (
+        <div key={item.name}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-xs text-gray-700">{item.name}</span>
+            </div>
+            <span className="text-xs font-semibold text-gray-900">{formatCurrency(item.value, currencyCode)}</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${(item.value / max) * 100}%`, backgroundColor: item.color }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const CHART_COLORS = [
+  "#6366F1", "#F43F5E", "#10B981", "#F59E0B", "#3B82F6",
+  "#EC4899", "#14B8A6", "#F97316", "#8B5CF6", "#06B6D4",
+  "#84CC16", "#EF4444", "#A855F7", "#0EA5E9", "#22C55E",
+];
+
+function getColor(name: string): string {
   let hash = 0;
-  for (let i = 0; i < categoryName.length; i++) {
-    hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  return colors[Math.abs(hash) % colors.length];
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return CHART_COLORS[Math.abs(hash) % CHART_COLORS.length];
+}
+
+function getColorByIndex(index: number): string {
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
