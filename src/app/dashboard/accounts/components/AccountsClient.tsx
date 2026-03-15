@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
 import { useAppData } from "@/lib/AppDataContext";
 import AddAssetSheet from "../../assets/components/AddAssetSheet";
+import AccountDetailSheet from "./AccountDetailSheet";
+import AddTransactionSheet from "../../components/AddTransactionSheet";
 import type { AssetCategoryRow, AssetWithCategory } from "@/types/database";
 
 export type AccountGroup = {
@@ -34,6 +36,9 @@ export default function AccountsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [detailAccount, setDetailAccount] = useState<AssetWithCategory | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   const netTotal = totalAssets - totalLiabilities;
 
@@ -146,14 +151,14 @@ export default function AccountsClient({
               <div className={`grid grid-cols-3 items-center gap-4 px-4 py-2 border-b border-gray-100 ${
                 group.isLiability ? "bg-rose-50" : "bg-gray-50"
               }`}>
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-xs font-semibold text-gray-700">
                   {group.icon} {group.label}
                 </span>
 
                 {/* Liability Total Column */}
                 <div className="text-right">
                   {group.isLiability && (
-                    <span className="text-sm font-bold text-rose-500">
+                    <span className="text-xs font-semibold text-rose-500">
                       -{fmt(Math.abs(group.total))}
                     </span>
                   )}
@@ -162,7 +167,7 @@ export default function AccountsClient({
                 {/* Asset Total Column */}
                 <div className="text-right">
                   {!group.isLiability && (
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-xs font-semibold text-gray-900">
                       {fmt(group.total)}
                     </span>
                   )}
@@ -172,13 +177,22 @@ export default function AccountsClient({
               {/* Account rows */}
               <div className="divide-y divide-gray-50">
                 {group.accounts.map((account) => (
-                  <div key={account.id} className="grid grid-cols-3 items-center gap-4 px-4 py-2">
+                  <div
+                    key={account.id}
+                    className={`grid grid-cols-3 items-center gap-4 px-4 py-2 ${!editMode ? "cursor-pointer active:bg-gray-50" : ""}`}
+                    onClick={() => {
+                      if (!editMode) {
+                        setDetailAccount(account);
+                        setDetailOpen(true);
+                      }
+                    }}
+                  >
                     {/* Account Name */}
                     <div className="flex items-center gap-3">
                       {/* Delete button (edit mode) */}
                       {editMode && (
                         <button
-                          onClick={() => handleDelete(account.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(account.id); }}
                           disabled={deletingId === account.id}
                           className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-rose-500 hover:bg-rose-600 text-white transition"
                         >
@@ -187,14 +201,14 @@ export default function AccountsClient({
                             : <X className="h-3 w-3" />}
                         </button>
                       )}
-                      <p className="text-sm text-gray-800">{account.name}</p>
+                      <p className="text-xs font-medium text-gray-900">{account.name}</p>
                     </div>
 
                     {/* Liability Column */}
                     <div className="text-right">
                       {group.isLiability && (
                         editMode && editingId === account.id ? (
-                          <div className="flex items-center gap-1.5 justify-end">
+                          <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                             <div className="relative">
                               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
                                 {symbol}
@@ -227,14 +241,17 @@ export default function AccountsClient({
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                        ) : (
+                        ) : editMode ? (
                           <button
-                            onClick={() => editMode && startEdit(account)}
-                            disabled={!editMode}
-                            className={`text-sm font-medium text-rose-500 ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
+                            onClick={(e) => { e.stopPropagation(); startEdit(account); }}
+                            className="text-xs font-semibold text-rose-500 underline underline-offset-2 decoration-dashed decoration-gray-400"
                           >
                             -{fmt(Math.abs(Number(account.current_value)))}
                           </button>
+                        ) : (
+                          <span className="text-xs font-semibold text-rose-500">
+                            -{fmt(Math.abs(Number(account.current_value)))}
+                          </span>
                         )
                       )}
                     </div>
@@ -243,7 +260,7 @@ export default function AccountsClient({
                     <div className="text-right">
                       {!group.isLiability && (
                         editMode && editingId === account.id ? (
-                          <div className="flex items-center gap-1.5 justify-end">
+                          <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
                             <div className="relative">
                               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
                                 {symbol}
@@ -276,14 +293,17 @@ export default function AccountsClient({
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                        ) : (
+                        ) : editMode ? (
                           <button
-                            onClick={() => editMode && startEdit(account)}
-                            disabled={!editMode}
-                            className={`text-sm font-medium text-gray-900 ${editMode ? "underline underline-offset-2 decoration-dashed decoration-gray-400" : ""}`}
+                            onClick={(e) => { e.stopPropagation(); startEdit(account); }}
+                            className="text-xs font-semibold text-gray-900 underline underline-offset-2 decoration-dashed decoration-gray-400"
                           >
                             {fmt(Number(account.current_value))}
                           </button>
+                        ) : (
+                          <span className="text-xs font-semibold text-gray-900">
+                            {fmt(Number(account.current_value))}
+                          </span>
                         )
                       )}
                     </div>
@@ -300,6 +320,24 @@ export default function AccountsClient({
         onClose={() => setAddOpen(false)}
         currencySymbol={symbol}
         assetCategories={assetCategories}
+      />
+
+      <AccountDetailSheet
+        account={detailAccount}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        symbol={symbol}
+        onPayLiability={() => {
+          setDetailOpen(false);
+          setPayOpen(true);
+        }}
+      />
+
+      <AddTransactionSheet
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
+        initialType="transfer"
+        initialToAccount={detailAccount}
       />
     </div>
   );

@@ -19,7 +19,7 @@ function StatsContent({ transactions, symbol }: DashboardStatsProps) {
   const total = totalIncome - totalExpenses;
 
   return (
-    <div className="flex mb-4">
+    <div className="flex">
       <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
         <div className="flex items-center gap-1">
           <ArrowUpRight className="h-3 w-3 text-green-600" />

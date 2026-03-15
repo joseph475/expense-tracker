@@ -71,20 +71,20 @@ function DashboardInner() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto bg-white min-h-screen">
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
-          <DashboardFilterTabs assets={assets} />
-        </div>
-        <div className="p-4 space-y-6">
-          {view !== "calendar" && <DashboardStats transactions={filteredTx} symbol={symbol} />}
-          {view === "calendar" ? (
-            <CalendarView transactions={filteredTx} symbol={symbol} currentDate={date || todayStr} />
-          ) : (
-            <RecentTransactions transactions={filteredTx} currencySymbol={symbol} />
-          )}
-        </div>
-        <AddTransactionButton />
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <DashboardFilterTabs assets={assets} />
       </div>
+      {view !== "calendar" && (
+        <div className="bg-white border-b border-gray-100 px-4 py-3">
+          <DashboardStats transactions={filteredTx} symbol={symbol} />
+        </div>
+      )}
+      {view === "calendar" ? (
+        <CalendarView transactions={filteredTx} symbol={symbol} currentDate={date || todayStr} />
+      ) : (
+        <RecentTransactions transactions={filteredTx} currencySymbol={symbol} />
+      )}
+      <AddTransactionButton />
     </div>
   );
 }

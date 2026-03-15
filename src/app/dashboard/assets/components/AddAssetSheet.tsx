@@ -16,7 +16,7 @@ export default function AddAssetSheet({
   currencySymbol: string;
   assetCategories: AssetCategoryRow[];
 }) {
-  const { addAsset } = useAppData();
+  const { addAsset, assets } = useAppData();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<AssetCategoryRow | null>(null);
@@ -42,12 +42,15 @@ export default function AddAssetSheet({
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
-    const current_value = parseFloat((form.elements.namedItem("current_value") as HTMLInputElement).value);
+    const rawValue = (form.elements.namedItem("current_value") as HTMLInputElement).value;
+    const current_value = rawValue === "" ? 0 : parseFloat(rawValue);
     const rateEl = form.elements.namedItem("interest_rate") as HTMLInputElement;
     const interest_rate = rateEl.value !== "" ? parseFloat(rateEl.value) : null;
 
     if (!name) { setError("Account name is required."); return; }
     if (isNaN(current_value) || current_value < 0) { setError("Value must be 0 or more."); return; }
+    const duplicate = assets.some(a => a.name.trim().toLowerCase() === name.toLowerCase());
+    if (duplicate) { setError(`An account named "${name}" already exists.`); return; }
 
     setIsPending(true);
     addAsset({ name, asset_category_id: selectedCategory?.id ?? null, current_value, interest_rate });
@@ -116,8 +119,7 @@ export default function AddAssetSheet({
                 inputMode="decimal"
                 step="0.01"
                 min="0"
-                required
-                placeholder="Current value"
+                placeholder="Initial balance (default 0)"
                 className="w-full pl-6 pr-4 py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400"
               />
             </div>

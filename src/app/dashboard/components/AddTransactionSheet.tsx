@@ -54,17 +54,21 @@ type ExtendedTransactionType = TransactionType | "transfer";
 export default function AddTransactionSheet({
   open,
   onClose,
+  initialType,
+  initialToAccount,
 }: {
   open: boolean;
   onClose: () => void;
+  initialType?: ExtendedTransactionType;
+  initialToAccount?: Asset | null;
 }) {
   const { categories, assets, settings, addTransaction } = useAppData();
   const currencySymbol = settings.currency_symbol;
 
-  const [type, setType] = useState<ExtendedTransactionType>("expense");
+  const [type, setType] = useState<ExtendedTransactionType>(initialType ?? "expense");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<Asset | null>(null);
-  const [selectedToAccount, setSelectedToAccount] = useState<Asset | null>(null);
+  const [selectedToAccount, setSelectedToAccount] = useState<Asset | null>(initialToAccount ?? null);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showAccountPicker, setShowAccountPicker] = useState(false);
   const [showToAccountPicker, setShowToAccountPicker] = useState(false);
@@ -76,6 +80,10 @@ export default function AddTransactionSheet({
   const formRef = useRef<HTMLFormElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  const initialTypeRef = useRef(initialType);
+  const initialToAccountRef = useRef(initialToAccount);
+  useEffect(() => { initialTypeRef.current = initialType; }, [initialType]);
+  useEffect(() => { initialToAccountRef.current = initialToAccount; }, [initialToAccount]);
 
   const filteredCategories = categories.filter((c) => c.type === (type === "transfer" ? "expense" : type));
 
@@ -90,8 +98,8 @@ export default function AddTransactionSheet({
       formRef.current?.reset();
       setSelectedCategory(null);
       setSelectedAccount(null);
-      setSelectedToAccount(null);
-      setType("expense");
+      setSelectedToAccount(initialToAccountRef.current ?? null);
+      setType(initialTypeRef.current ?? "expense");
       setError(null);
       setSelectedDate(today());
       setPickerMonthStr(today().slice(0, 7));
