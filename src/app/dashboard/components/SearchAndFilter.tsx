@@ -31,8 +31,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
 
   const updateURL = (search?: string, accounts?: string[]) => {
     const params = new URLSearchParams(searchParams.toString());
-    
-    // Update search parameter
+
     if (search !== undefined) {
       if (search.trim()) {
         params.set("search", search.trim());
@@ -41,7 +40,6 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
       }
     }
 
-    // Update accounts parameter
     if (accounts !== undefined) {
       if (accounts.length > 0) {
         params.set("accounts", accounts.join(","));
@@ -50,11 +48,10 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
       }
     }
 
-    // Preserve other parameters
     const currentView = searchParams.get("view");
     const currentDate = searchParams.get("date");
     const currentMonth = searchParams.get("month");
-    
+
     if (currentView) params.set("view", currentView);
     if (currentDate) params.set("date", currentDate);
     if (currentMonth) params.set("month", currentMonth);
@@ -72,7 +69,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
     const newSelected = selectedAccounts.includes(accountId)
       ? selectedAccounts.filter(id => id !== accountId)
       : [...selectedAccounts, accountId];
-    
+
     setSelectedAccounts(newSelected);
   };
 
@@ -97,7 +94,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
           <button
             onClick={() => setShowSearchModal(true)}
             className={`p-2 rounded-lg transition ${
-              searchTerm ? "bg-indigo-100 text-indigo-600" : "text-gray-500 hover:bg-gray-100"
+              searchTerm ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-600" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
           >
             <Search className="h-4 w-4" />
@@ -106,7 +103,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
 
         {/* Center - Transactions Label */}
         <div className="flex justify-center">
-          <h2 className="text-base font-semibold text-gray-900">Transactions</h2>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Transactions</h2>
         </div>
 
         {/* Right side - Filter Button with Active filters indicator */}
@@ -121,7 +118,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
             <button
               onClick={() => setShowFilterModal(true)}
               className={`p-2 rounded-lg transition ${
-                currentAccountFilters.length > 0 ? "bg-indigo-100 text-indigo-600" : "text-gray-500 hover:bg-gray-100"
+                currentAccountFilters.length > 0 ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-600" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
               <Filter className="h-4 w-4" />
@@ -142,15 +139,15 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
         }`}
         onClick={() => setShowSearchModal(false)}
       />
-      <div className={`fixed inset-0 z-60 bg-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-0 z-60 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
         showSearchModal ? "translate-x-0" : "translate-x-full pointer-events-none"
       }`}>
         <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
-            <h2 className="text-base font-semibold text-gray-900">Search</h2>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Search</h2>
             <button
               onClick={() => setShowSearchModal(false)}
-              className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition"
+              className="p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
             >
               <X className="h-4 w-4" />
             </button>
@@ -160,14 +157,14 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
             <form onSubmit={handleSearchSubmit} className="space-y-3">
               <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="search"
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Descriptions, categories, accounts..."
-                    className="w-full pl-9 pr-4 py-3 text-sm bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400"
+                    className="w-full pl-9 pr-4 py-3 text-sm bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
                     autoFocus
                   />
                 </div>
@@ -175,7 +172,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
                   <button
                     type="button"
                     onClick={() => { setSearchTerm(""); updateURL(""); setShowSearchModal(false); }}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition font-medium shrink-0"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition font-medium shrink-0"
                   >
                     Clear
                   </button>
@@ -202,15 +199,15 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
         }`}
         onClick={() => setShowFilterModal(false)}
       />
-      <div className={`fixed inset-0 z-60 bg-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-0 z-60 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
         showFilterModal ? "translate-x-0" : "translate-x-full pointer-events-none"
       }`}>
         <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
-            <h2 className="text-base font-semibold text-gray-900">Filter by Account</h2>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Filter by Account</h2>
             <button
               onClick={() => setShowFilterModal(false)}
-              className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition"
+              className="p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
             >
               <X className="h-4 w-4" />
             </button>
@@ -221,7 +218,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
               {assets.map((account) => (
                 <label
                   key={account.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-100 active:bg-gray-100 transition"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border border-gray-100 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition"
                 >
                   <div className="relative shrink-0">
                     <input
@@ -233,7 +230,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
                     <div className={`w-4.5 h-4.5 rounded border-2 flex items-center justify-center transition ${
                       selectedAccounts.includes(account.id)
                         ? "bg-indigo-600 border-indigo-600"
-                        : "border-gray-300"
+                        : "border-gray-300 dark:border-gray-600"
                     }`}>
                       {selectedAccounts.includes(account.id) && (
                         <Check className="h-2.5 w-2.5 text-white" />
@@ -242,14 +239,14 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
                   </div>
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="text-base leading-none">{account.asset_categories?.icon || "💰"}</span>
-                    <span className="text-sm font-medium text-gray-900 truncate">{account.name}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{account.name}</span>
                   </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="px-4 py-3 border-t border-gray-100 flex gap-2">
+          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
             <button
               onClick={applyAccountFilter}
               className="flex-1 bg-indigo-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
@@ -259,7 +256,7 @@ export default function SearchAndFilter({ assets }: SearchAndFilterProps) {
             {selectedAccounts.length > 0 && (
               <button
                 onClick={clearAccountFilter}
-                className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition font-medium"
+                className="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition font-medium"
               >
                 Clear
               </button>

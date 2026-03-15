@@ -102,22 +102,22 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <h1 className="text-lg font-bold text-gray-900">Statistics</h1>
-        <p className="text-xs text-gray-500">Breakdown by category</p>
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-4">
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Statistics</h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Breakdown by category</p>
       </div>
 
       {/* Period filter */}
-      <div className="bg-white border-b border-gray-100 flex items-center gap-2 px-4 py-3">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 px-4 py-3">
         {(["month", "year", "all"] as FilterPeriod[]).map(p => (
           <button
             key={p}
             onClick={() => setFilterPeriod(p)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-              filterPeriod === p ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
+              filterPeriod === p ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
             }`}
           >
             {p === "month" ? "Month" : p === "year" ? "Year" : "All time"}
@@ -125,30 +125,30 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
         ))}
         {(filterPeriod === "month" || filterPeriod === "year") && (
           <>
-            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1" />
             <button
               onClick={() => filterPeriod === "month" ? setShowMonthPicker(true) : setShowYearPicker(true)}
-              className="flex items-center gap-1 text-xs font-semibold text-gray-700"
+              className="flex items-center gap-1 text-xs font-semibold text-gray-700 dark:text-gray-300"
             >
               {filterPeriod === "month" ? getMonthLabel() : selectedYear}
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
             </button>
           </>
         )}
       </div>
 
       {/* Summary row */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 grid grid-cols-3 gap-2">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-4 grid grid-cols-3 gap-2">
         <div className="text-center">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Income</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">Income</p>
           <p className="text-sm font-bold text-green-600">{formatCurrency(totalIncome, currencyCode)}</p>
         </div>
-        <div className="text-center border-x border-gray-100">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Expenses</p>
+        <div className="text-center border-x border-gray-100 dark:border-gray-700">
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">Expenses</p>
           <p className="text-sm font-bold text-red-500">{formatCurrency(totalExpense, currencyCode)}</p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Net</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">Net</p>
           <p className={`text-sm font-bold ${net >= 0 ? "text-indigo-600" : "text-red-500"}`}>
             {net >= 0 ? "" : "-"}{formatCurrency(Math.abs(net), currencyCode)}
           </p>
@@ -156,14 +156,14 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
       </div>
 
       {/* Monthly bar chart */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Last 6 Months</p>
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 pt-4 pb-5">
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Last 6 Months</p>
         <BarChart data={monthlyData} currencyCode={currencyCode} />
       </div>
 
       {/* Dual pie charts */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">By Category</p>
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 pt-4 pb-5">
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">By Category</p>
         <div className="flex justify-around">
           <MiniPieChart data={expenseData} currencyCode={currencyCode} label="Expenses" labelColor="#ef4444" />
           <MiniPieChart data={incomeData} currencyCode={currencyCode} label="Income" labelColor="#16a34a" />
@@ -172,16 +172,16 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
 
       {/* Top expense categories */}
       {topExpenseCategories.length > 0 && (
-        <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-5">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Expenses</p>
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 pt-4 pb-5">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Top Expenses</p>
           <CategoryList items={topExpenseCategories} currencyCode={currencyCode} />
         </div>
       )}
 
       {/* Top income categories */}
       {topIncomeCategories.length > 0 && (
-        <div className="bg-white px-4 pt-4 pb-5">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Income</p>
+        <div className="bg-white dark:bg-gray-900 px-4 pt-4 pb-5">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Top Income</p>
           <CategoryList items={topIncomeCategories} currencyCode={currencyCode} />
         </div>
       )}
@@ -190,17 +190,17 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
       {filteredTransactions.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="text-3xl mb-3">📊</span>
-          <p className="text-sm font-medium text-gray-500">No data for this period</p>
-          <p className="text-xs text-gray-400 mt-1">Add some transactions to see stats</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No data for this period</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Add some transactions to see stats</p>
         </div>
       )}
 
       {/* Month Picker */}
       {showMonthPicker && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowMonthPicker(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Select Month</h3>
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Month</h3>
             </div>
             <div className="overflow-y-auto max-h-72 p-4 space-y-1 pb-8">
               {availableMonths.map(month => {
@@ -211,7 +211,7 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
                     key={month}
                     onClick={() => { setSelectedMonth(month); setShowMonthPicker(false); }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
-                      selectedMonth === month ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      selectedMonth === month ? "bg-indigo-600 text-white" : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     {label}
@@ -226,9 +226,9 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
       {/* Year Picker */}
       {showYearPicker && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowYearPicker(false)}>
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Select Year</h3>
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Year</h3>
             </div>
             <div className="p-4 space-y-1 pb-8">
               {availableYears.map(year => (
@@ -236,7 +236,7 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
                   key={year}
                   onClick={() => { setSelectedYear(year); setShowYearPicker(false); }}
                   className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
-                    selectedYear === year ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    selectedYear === year ? "bg-indigo-600 text-white" : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   {year}
@@ -273,11 +273,11 @@ function CategoryList({ items, currencyCode }: { items: { name: string; value: n
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-xs text-gray-700">{item.name}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-300">{item.name}</span>
             </div>
-            <span className="text-xs font-semibold text-gray-900">{formatCurrency(item.value, currencyCode)}</span>
+            <span className="text-xs font-semibold text-gray-900 dark:text-white">{formatCurrency(item.value, currencyCode)}</span>
           </div>
-          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full"
               style={{ width: `${(item.value / max) * 100}%`, backgroundColor: item.color }}

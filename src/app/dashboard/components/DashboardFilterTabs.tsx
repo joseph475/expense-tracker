@@ -49,11 +49,11 @@ export default function DashboardFilterTabs({ assets = [] }: DashboardFilterTabs
       </div>
 
       {/* Tabs Row */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => navigate("today")}
           className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            view === "today" ? "text-indigo-600" : "text-gray-400"
+            view === "today" ? "text-indigo-600" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           Today
@@ -62,7 +62,7 @@ export default function DashboardFilterTabs({ assets = [] }: DashboardFilterTabs
         <button
           onClick={() => navigate("month", { month: selectedMonth })}
           className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            view === "month" ? "text-indigo-600" : "text-gray-400"
+            view === "month" ? "text-indigo-600" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           Month
@@ -71,7 +71,7 @@ export default function DashboardFilterTabs({ assets = [] }: DashboardFilterTabs
         <button
           onClick={() => navigate("calendar", { date: selectedDate || new Date().toISOString().split("T")[0] })}
           className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            view === "calendar" ? "text-indigo-600" : "text-gray-400"
+            view === "calendar" ? "text-indigo-600" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           Calendar

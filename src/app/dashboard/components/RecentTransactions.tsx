@@ -68,9 +68,9 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
 
   return (
     <>
-      <div className="bg-white">
-        <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-900">
+        <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-gray-900 dark:text-white">
             {view === "today" ? "Today" : "Transactions"}
           </h2>
 
@@ -78,7 +78,7 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
             <div className="flex items-center gap-1">
               <button
                 onClick={() => navigateMonth(addMonths(selectedMonth, -1))}
-                className="p-1 rounded-md text-gray-400 hover:bg-gray-100 transition"
+                className="p-1 rounded-md text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
@@ -88,7 +88,7 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
                   setPickerYear(Number(selectedMonth.split("-")[0]));
                   setPickerOpen(true);
                 }}
-                className="text-xs font-semibold text-gray-700 hover:text-indigo-600 transition px-1 py-0.5 rounded-md hover:bg-gray-50"
+                className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition px-1 py-0.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 {formatMonth(selectedMonth)}
               </button>
@@ -96,7 +96,7 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
               <button
                 onClick={() => navigateMonth(addMonths(selectedMonth, 1))}
                 disabled={!canGoNext}
-                className="p-1 rounded-md text-gray-400 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
+                className="p-1 rounded-md text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-30 disabled:pointer-events-none"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
@@ -107,27 +107,27 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
         {transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <span className="text-3xl mb-3">🧾</span>
-            <p className="text-sm font-medium text-gray-500">No transactions</p>
-            <p className="text-xs text-gray-400 mt-1">Tap + to add one</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No transactions</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Tap + to add one</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {transactions.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setSelectedTransactionId(t.id)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
               >
-                <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
                   <span className="text-xs">
                     {t.type === "transfer" ? "↔️" : t.category?.icon || "💰"}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-900 truncate">
+                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
                     {t.description ?? (t.type === "transfer" ? "Transfer" : t.category?.name || "Transaction")}
                   </p>
-                  <p className="text-xs text-gray-500">{t.date}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t.date}</p>
                 </div>
                 <span className={`text-xs font-semibold shrink-0 ${
                   t.type === "income" ? "text-green-600" :
@@ -146,25 +146,25 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
       {pickerOpen && (
         <div className="fixed inset-0 z-70 bg-black/40" onClick={() => setPickerOpen(false)}>
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden"
+            className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Select Month</h3>
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Month</h3>
             </div>
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setPickerYear((y) => y - 1)}
-                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                  className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <span className="text-base font-semibold text-gray-900">{pickerYear}</span>
+                <span className="text-base font-semibold text-gray-900 dark:text-white">{pickerYear}</span>
                 <button
                   onClick={() => setPickerYear((y) => y + 1)}
                   disabled={pickerYear >= todayYear}
-                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
+                  className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-30 disabled:pointer-events-none"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -186,8 +186,8 @@ export default function RecentTransactions({ transactions, currencySymbol }: Rec
                         isSelected
                           ? "bg-indigo-600 text-white"
                           : isFuture
-                          ? "text-gray-300 pointer-events-none bg-gray-50"
-                          : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 bg-gray-50"
+                          ? "text-gray-300 dark:text-gray-600 pointer-events-none bg-gray-50 dark:bg-gray-800"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 bg-gray-50 dark:bg-gray-800"
                       }`}
                     >
                       {name}

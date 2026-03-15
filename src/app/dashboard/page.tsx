@@ -70,12 +70,12 @@ function DashboardInner() {
   const symbol = settings.currency_symbol;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <DashboardFilterTabs assets={assets} />
       </div>
       {view !== "calendar" && (
-        <div className="bg-white border-b border-gray-100 px-4 py-3">
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3">
           <DashboardStats transactions={filteredTx} symbol={symbol} />
         </div>
       )}

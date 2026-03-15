@@ -43,6 +43,7 @@ export interface TransactionFull extends Transaction {
 export interface Settings {
   currency_code: string;
   currency_symbol: string;
+  theme?: "light" | "dark";
 }
 
 interface AppContextValue {
@@ -75,7 +76,7 @@ interface AppContextValue {
   updateAssetCategory: (id: string, data: { name: string; icon: string; is_liability: boolean }) => void;
   deleteAssetCategory: (id: string) => void;
   // Settings
-  updateSettings: (data: { currency_code: string; currency_symbol: string }) => void;
+  updateSettings: (data: Settings) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -140,6 +141,11 @@ export function AppDataProvider({
     setCategories(mergedCats);
     setAssetCategories(mergedAC);
     setSettings(savedSettings);
+
+    // Apply theme class
+    const isDark = savedSettings.theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+    try { localStorage.setItem("mt_theme", isDark ? "dark" : "light"); } catch {}
 
     // Persist merged categories if they were freshly seeded
     if (!hasDefaults) lsSave(lsKey(userId, "categories"), mergedCats);
@@ -332,6 +338,10 @@ export function AppDataProvider({
   function updateSettings(data: Settings) {
     setSettings(data);
     lsSave(lsKey(userId, "settings"), data);
+    // Apply theme immediately
+    const isDark = data.theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+    try { localStorage.setItem("mt_theme", isDark ? "dark" : "light"); } catch {}
   }
 
   // Don't render children until data is loaded from localStorage

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 /* Prevent iOS Safari zoom on input focus (requires font-size >= 16px) */
 input,
 textarea,

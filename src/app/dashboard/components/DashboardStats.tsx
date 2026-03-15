@@ -23,22 +23,22 @@ function StatsContent({ transactions, symbol }: DashboardStatsProps) {
       <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
         <div className="flex items-center gap-1">
           <ArrowUpRight className="h-3 w-3 text-green-600" />
-          <span className="text-xs text-gray-400">In</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">In</span>
         </div>
         <span className="text-sm font-semibold text-green-600">{formatAmount(totalIncome, symbol)}</span>
       </div>
-      <div className="w-px bg-gray-100" />
+      <div className="w-px bg-gray-100 dark:bg-gray-700" />
       <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
         <div className="flex items-center gap-1">
           <ArrowDownLeft className="h-3 w-3 text-red-400" />
-          <span className="text-xs text-gray-400">Out</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Out</span>
         </div>
         <span className="text-sm font-semibold text-red-400">{formatAmount(totalExpenses, symbol)}</span>
       </div>
-      <div className="w-px bg-gray-100" />
+      <div className="w-px bg-gray-100 dark:bg-gray-700" />
       <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
-        <span className="text-xs text-gray-400">Total</span>
-        <span className={`text-sm font-semibold ${total >= 0 ? "text-gray-900" : "text-red-500"}`}>
+        <span className="text-xs text-gray-400 dark:text-gray-500">Total</span>
+        <span className={`text-sm font-semibold ${total >= 0 ? "text-gray-900 dark:text-white" : "text-red-500"}`}>
           {formatAmount(total, symbol)}
         </span>
       </div>

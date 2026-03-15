@@ -43,11 +43,11 @@ export default function CategoryManager() {
   return (
     <div className="space-y-4">
       {/* Type tabs */}
-      <div className="flex border-b border-gray-200 -mx-4 px-4">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 -mx-4 px-4">
         <button
           onClick={() => { setTab("expense"); setShowForm(false); }}
           className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            tab === "expense" ? "text-red-500" : "text-gray-400"
+            tab === "expense" ? "text-red-500" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           Expense
@@ -56,7 +56,7 @@ export default function CategoryManager() {
         <button
           onClick={() => { setTab("income"); setShowForm(false); }}
           className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
-            tab === "income" ? "text-green-500" : "text-gray-400"
+            tab === "income" ? "text-green-500" : "text-gray-400 dark:text-gray-500"
           }`}
         >
           Income
@@ -66,12 +66,12 @@ export default function CategoryManager() {
 
       {/* Default categories */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
           <Lock className="h-3 w-3" /> Defaults
         </p>
         <div className="flex flex-wrap gap-2">
           {defaults.map((cat) => (
-            <span key={cat.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-500">
+            <span key={cat.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-500 dark:text-gray-400">
               {cat.icon} {cat.name}
             </span>
           ))}
@@ -80,21 +80,21 @@ export default function CategoryManager() {
 
       {/* Custom categories */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Your Categories</p>
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Your Categories</p>
         {custom.length === 0 && !showForm ? (
-          <p className="text-xs text-gray-400">None yet.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">None yet.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {custom.map((cat) => (
               <span
                 key={cat.id}
-                className="flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-sm text-indigo-700"
+                className="flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950 text-sm text-indigo-700 dark:text-indigo-300"
               >
                 {cat.icon} {cat.name}
                 <button
                   onClick={() => handleDelete(cat.id)}
                   disabled={deletingId === cat.id}
-                  className="ml-0.5 p-0.5 rounded-md hover:bg-indigo-200 transition"
+                  className="ml-0.5 p-0.5 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-800 transition"
                 >
                   {deletingId === cat.id
                     ? <Loader2 className="h-3 w-3 animate-spin" />
@@ -109,17 +109,16 @@ export default function CategoryManager() {
 
       {/* Add form */}
       {showForm ? (
-        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-          {/* Icon picker */}
+        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-600">Icon</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Icon</label>
             <div className="flex flex-wrap gap-1.5">
               {SUGGESTED_ICONS[tab].map((e) => (
                 <button
                   key={e} type="button"
                   onClick={() => setIcon(e)}
                   className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition ${
-                    icon === e ? "bg-indigo-100 ring-2 ring-indigo-500" : "bg-white border border-gray-200 hover:border-indigo-300"
+                    icon === e ? "bg-indigo-100 dark:bg-indigo-900 ring-2 ring-indigo-500" : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-indigo-300"
                   }`}
                 >
                   {e}
@@ -131,27 +130,26 @@ export default function CategoryManager() {
               onChange={(e) => setIcon(e.target.value)}
               placeholder="Or type any emoji"
               maxLength={4}
-              className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
-          {/* Name */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-600">Name</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Name</label>
             <input
               type="text" required placeholder="e.g. Coffee"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl px-3 py-2">{error}</p>
           )}
 
           <div className="flex gap-2">
-            <button type="button" onClick={() => { setShowForm(false); setError(null); }} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition">
+            <button type="button" onClick={() => { setShowForm(false); setError(null); }} className="flex-1 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
               Cancel
             </button>
             <button type="submit" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition">

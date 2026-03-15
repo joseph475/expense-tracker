@@ -92,7 +92,6 @@ export default function AddTransactionSheet({
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Reset form state when modal opens
   useEffect(() => {
     if (open) {
       formRef.current?.reset();
@@ -151,13 +150,13 @@ export default function AddTransactionSheet({
         onClick={onClose}
       />
 
-      <div className={`fixed z-60 inset-0 bg-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed z-60 inset-0 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
         open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
       }`}>
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900">Add Transaction</h2>
-            <button onClick={onClose} className="p-2 rounded-full text-gray-400 hover:bg-gray-100 transition">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add Transaction</h2>
+            <button onClick={onClose} className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -169,7 +168,7 @@ export default function AddTransactionSheet({
                 type="button"
                 onClick={() => setType("expense")}
                 className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
-                  type === "expense" ? "bg-red-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                  type === "expense" ? "bg-red-500 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                 }`}
               >
                 <span className="text-lg leading-none">↑</span>
@@ -179,7 +178,7 @@ export default function AddTransactionSheet({
                 type="button"
                 onClick={() => setType("income")}
                 className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
-                  type === "income" ? "bg-green-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                  type === "income" ? "bg-green-500 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                 }`}
               >
                 <span className="text-lg leading-none">↓</span>
@@ -189,7 +188,7 @@ export default function AddTransactionSheet({
                 type="button"
                 onClick={() => setType("transfer")}
                 className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
-                  type === "transfer" ? "bg-blue-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                  type === "transfer" ? "bg-blue-500 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                 }`}
               >
                 <span className="text-lg leading-none">⇄</span>
@@ -198,11 +197,11 @@ export default function AddTransactionSheet({
             </div>
 
             <div className="relative">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">{currencySymbol}</span>
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-base font-medium">{currencySymbol}</span>
               <input
                 id="amount" name="amount" type="number" inputMode="decimal"
                 step="0.01" min="0.01" required placeholder="Amount"
-                className="w-full pl-6 pr-4 py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400"
+                className="w-full pl-6 pr-4 py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -212,12 +211,12 @@ export default function AddTransactionSheet({
                 <button
                   type="button"
                   onClick={() => setShowCategoryPicker(true)}
-                  className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-left"
+                  className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition text-left"
                 >
-                  <span className={selectedCategory ? "text-gray-900" : "text-gray-400"}>
+                  <span className={selectedCategory ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-600"}>
                     {selectedCategory ? `${selectedCategory.icon} ${selectedCategory.name}` : "Select Category *"}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </button>
               </div>
             )}
@@ -227,9 +226,9 @@ export default function AddTransactionSheet({
               <button
                 type="button"
                 onClick={() => setShowAccountPicker(true)}
-                className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-left"
+                className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition text-left"
               >
-                <span className={selectedAccount ? "text-gray-900" : "text-gray-400"}>
+                <span className={selectedAccount ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-600"}>
                   {selectedAccount
                     ? selectedAccount.name
                     : type === "transfer"
@@ -237,7 +236,7 @@ export default function AddTransactionSheet({
                       : "Select Account *"
                   }
                 </span>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               </button>
             </div>
 
@@ -247,12 +246,12 @@ export default function AddTransactionSheet({
                 <button
                   type="button"
                   onClick={() => setShowToAccountPicker(true)}
-                  className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-left"
+                  className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition text-left"
                 >
-                  <span className={selectedToAccount ? "text-gray-900" : "text-gray-400"}>
+                  <span className={selectedToAccount ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-600"}>
                     {selectedToAccount ? selectedToAccount.name : "To Account *"}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </button>
               </div>
             )}
@@ -260,21 +259,21 @@ export default function AddTransactionSheet({
             <button
               type="button"
               onClick={() => setShowDatePicker(true)}
-              className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none text-left"
+              className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none text-left"
             >
-              <span className="text-gray-900">{formatDisplayDate(selectedDate)}</span>
-              <ChevronDown className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-900 dark:text-white">{formatDisplayDate(selectedDate)}</span>
+              <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             </button>
 
             <input
               id="description" name="description" type="text"
               placeholder={type === "transfer" ? "Transfer note (optional)" : "Description (optional)"}
-              className="w-full px-0 py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400"
+              className="w-full px-0 py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
             />
 
             {error && (
-              <div className="p-3 bg-red-50 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-red-50 dark:bg-red-950 rounded-xl">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
@@ -291,7 +290,7 @@ export default function AddTransactionSheet({
               >
                 {isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : "Save"}
               </button>
-              <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-100 transition bg-gray-50">
+              <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition bg-gray-50 dark:bg-gray-800">
                 Cancel
               </button>
             </div>
@@ -305,17 +304,17 @@ export default function AddTransactionSheet({
             onClick={() => setShowCategoryPicker(false)}
           >
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
                 showCategoryPicker ? "translate-y-0" : "translate-y-full"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">Select Category</h3>
+                <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Category</h3>
                 </div>
                 <div className="overflow-y-auto max-h-[50vh] p-4 space-y-4">
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                       {type === "income" ? "Income" : "Expense"} Categories
                     </p>
                     <div className="grid grid-cols-3 gap-3">
@@ -327,10 +326,10 @@ export default function AddTransactionSheet({
                             setSelectedCategory(cat);
                             setShowCategoryPicker(false);
                           }}
-                          className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition text-center"
+                          className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-center"
                         >
                           <span className="text-2xl">{cat.icon}</span>
-                          <span className="text-xs font-medium text-gray-900 leading-tight">{cat.name}</span>
+                          <span className="text-xs font-medium text-gray-900 dark:text-white leading-tight">{cat.name}</span>
                         </button>
                       ))}
                     </div>
@@ -347,33 +346,29 @@ export default function AddTransactionSheet({
             onClick={() => setShowAccountPicker(false)}
           >
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
                 showAccountPicker ? "translate-y-0" : "translate-y-full"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">Select Account</h3>
+                <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Account</h3>
                 </div>
                 <div className="overflow-y-auto max-h-[50vh] p-4">
                   {(() => {
-                    // Filter assets for transfer "from" account (exclude liabilities)
                     const filteredAssets = type === "transfer"
                       ? assets.filter(a => a.category !== "liability")
                       : assets;
 
-                    // Group assets by category
                     const groupedAssets = filteredAssets.reduce<Record<string, Asset[]>>((acc, a) => {
                       if (!acc[a.category]) acc[a.category] = [];
                       acc[a.category].push(a);
                       return acc;
                     }, {});
 
-                    // Sort categories based on transaction type
                     const sortedEntries = Object.entries(groupedAssets).sort(([catA], [catB]) => {
                       const isLiabilityA = catA === "liability";
                       const isLiabilityB = catB === "liability";
-
                       if (type === "expense") {
                         if (isLiabilityA && !isLiabilityB) return -1;
                         if (!isLiabilityA && isLiabilityB) return 1;
@@ -381,14 +376,13 @@ export default function AddTransactionSheet({
                         if (!isLiabilityA && isLiabilityB) return -1;
                         if (isLiabilityA && !isLiabilityB) return 1;
                       }
-
                       return catA.localeCompare(catB);
                     });
 
                     return sortedEntries;
                   })().map(([cat, group]) => (
                     <div key={cat} className="mb-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                         {CATEGORY_LABELS[cat as AssetCategory] ?? cat}
                       </p>
                       <div className="grid grid-cols-2 gap-3">
@@ -400,14 +394,14 @@ export default function AddTransactionSheet({
                               setSelectedAccount(account);
                               setShowAccountPicker(false);
                             }}
-                            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition text-center"
+                            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-center"
                           >
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                              <span className="text-sm font-medium text-indigo-600">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
                                 {account.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <span className="text-xs font-medium text-gray-900 leading-tight">{account.name}</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-white leading-tight">{account.name}</span>
                           </button>
                         ))}
                       </div>
@@ -425,13 +419,13 @@ export default function AddTransactionSheet({
             onClick={() => setShowToAccountPicker(false)}
           >
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
                 showToAccountPicker ? "translate-y-0" : "translate-y-full"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900">Select Destination Account</h3>
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Destination Account</h3>
               </div>
               <div className="overflow-y-auto max-h-[50vh] p-4">
                 {(() => {
@@ -450,7 +444,7 @@ export default function AddTransactionSheet({
                   return sortedEntries;
                 })().map(([cat, group]) => (
                   <div key={cat} className="mb-4">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                       {CATEGORY_LABELS[cat as AssetCategory] ?? cat}
                     </p>
                     <div className="grid grid-cols-2 gap-3">
@@ -461,17 +455,17 @@ export default function AddTransactionSheet({
                           onClick={() => { setSelectedToAccount(account); setShowToAccountPicker(false); }}
                           className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
                             selectedAccount?.id === account.id
-                              ? "bg-gray-200 cursor-not-allowed opacity-50"
-                              : "bg-gray-50 hover:bg-gray-100"
+                              ? "bg-gray-200 dark:bg-gray-700 cursor-not-allowed opacity-50"
+                              : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
                           }`}
                           disabled={selectedAccount?.id === account.id}
                         >
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span className="text-sm font-medium text-indigo-600">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
                               {account.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="text-xs font-medium text-gray-900 leading-tight">{account.name}</span>
+                          <span className="text-xs font-medium text-gray-900 dark:text-white leading-tight">{account.name}</span>
                         </button>
                       ))}
                     </div>
@@ -489,36 +483,36 @@ export default function AddTransactionSheet({
             onClick={() => setShowDatePicker(false)}
           >
             <div
-              className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden transform transition-transform duration-300 ease-out ${
+              className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl overflow-hidden transform transition-transform duration-300 ease-out ${
                 showDatePicker ? "translate-y-0" : "translate-y-full"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900">Select Date</h3>
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Date</h3>
               </div>
               <div className="p-4 pb-8">
                 <div className="flex items-center justify-between mb-4">
                   <button
                     type="button"
                     onClick={() => setPickerMonthStr((m) => shiftMonth(m, -1))}
-                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <span className="text-base font-semibold text-gray-900">{formatPickerMonth(pickerMonthStr)}</span>
+                  <span className="text-base font-semibold text-gray-900 dark:text-white">{formatPickerMonth(pickerMonthStr)}</span>
                   <button
                     type="button"
                     onClick={() => setPickerMonthStr((m) => shiftMonth(m, 1))}
                     disabled={pickerMonthStr >= today().slice(0, 7)}
-                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
+                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-30 disabled:pointer-events-none"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
                 <div className="grid grid-cols-7 mb-1">
                   {DAY_NAMES.map((d) => (
-                    <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                    <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{d}</div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-y-1">
@@ -536,8 +530,8 @@ export default function AddTransactionSheet({
                           isSelected
                             ? "bg-indigo-600 text-white"
                             : isFuture
-                            ? "text-gray-300 pointer-events-none"
-                            : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                            ? "text-gray-300 dark:text-gray-600 pointer-events-none"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600"
                         }`}
                       >
                         {Number(dateStr.split("-")[2])}

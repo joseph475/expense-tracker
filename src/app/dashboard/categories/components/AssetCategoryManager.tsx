@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Pencil, Check, X } from "lucide-react";
+import { Plus, Loader2, Pencil, Check, X } from "lucide-react";
 import type { AssetCategoryRow } from "@/types/database";
 import { useAppData } from "@/lib/AppDataContext";
 
@@ -29,17 +29,16 @@ function EditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-      {/* Icon picker */}
+    <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
       <div className="space-y-1.5">
-        <label className="block text-xs font-medium text-gray-600">Icon</label>
+        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Icon</label>
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTED_ICONS.map((e) => (
             <button
               key={e} type="button"
               onClick={() => setIcon(e)}
               className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition ${
-                icon === e ? "bg-indigo-100 ring-2 ring-indigo-500" : "bg-white border border-gray-200 hover:border-indigo-300"
+                icon === e ? "bg-indigo-100 dark:bg-indigo-900 ring-2 ring-indigo-500" : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-indigo-300"
               }`}
             >
               {e}
@@ -51,46 +50,44 @@ function EditForm({
           onChange={(e) => setIcon(e.target.value)}
           placeholder="Or type any emoji"
           maxLength={4}
-          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
-      {/* Name */}
       <div className="space-y-1.5">
-        <label className="block text-xs font-medium text-gray-600">Name</label>
+        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Name</label>
         <input
           type="text" required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         />
       </div>
 
-      {/* Liability toggle */}
       <button
         type="button"
         onClick={() => setIsLiability((v) => !v)}
         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-medium transition ${
-          isLiability ? "bg-red-50 border-red-200 text-red-600" : "bg-white border-gray-200 text-gray-600"
+          isLiability ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 text-red-600" : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400"
         }`}
       >
         <span>This is a liability (debt / credit card)</span>
         <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
-          isLiability ? "bg-red-500 border-red-500" : "border-gray-300"
+          isLiability ? "bg-red-500 border-red-500" : "border-gray-300 dark:border-gray-600"
         }`}>
           {isLiability && <span className="w-2 h-2 rounded-full bg-white" />}
         </span>
       </button>
 
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl px-3 py-2">{error}</p>
       )}
 
       <div className="flex gap-2">
         <button
           type="button"
           onClick={onDone}
-          className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition"
+          className="flex-1 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
         >
           Cancel
         </button>
@@ -125,16 +122,16 @@ function CategoryPill({
   return (
     <span className={`flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border text-sm ${
       cat.user_id === null
-        ? "border-gray-200 bg-gray-50 text-gray-600"
-        : "border-indigo-200 bg-indigo-50 text-indigo-700"
+        ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+        : "border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
     }`}>
       {cat.icon} {cat.name}
       {cat.is_liability && (
-        <span className="text-xs bg-red-100 text-red-500 px-1.5 py-0.5 rounded-md font-medium">Liability</span>
+        <span className="text-xs bg-red-100 dark:bg-red-900 text-red-500 dark:text-red-400 px-1.5 py-0.5 rounded-md font-medium">Liability</span>
       )}
       <button
         onClick={() => setEditing(true)}
-        className="ml-0.5 p-0.5 rounded-md hover:bg-gray-200 transition"
+        className="ml-0.5 p-0.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition"
         title="Edit"
       >
         <Pencil className="h-3 w-3" />
@@ -143,7 +140,7 @@ function CategoryPill({
         <button
           onClick={() => onDelete(cat.id)}
           disabled={deletingId === cat.id}
-          className="p-0.5 rounded-md hover:bg-red-100 transition"
+          className="p-0.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900 transition"
           title="Delete"
         >
           {deletingId === cat.id
@@ -189,7 +186,7 @@ export default function AssetCategoryManager() {
     <div className="space-y-4">
       {/* Default categories */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Defaults</p>
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Defaults</p>
         <div className="flex flex-wrap gap-2">
           {defaults.map((cat) => (
             <CategoryPill
@@ -206,7 +203,7 @@ export default function AssetCategoryManager() {
       {/* Custom categories */}
       {(custom.length > 0 || showForm) && (
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Your Categories</p>
+          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Your Categories</p>
           <div className="flex flex-wrap gap-2">
             {custom.map((cat) => (
               <CategoryPill
@@ -223,16 +220,16 @@ export default function AssetCategoryManager() {
 
       {/* Add form */}
       {showForm ? (
-        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-600">Icon</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Icon</label>
             <div className="flex flex-wrap gap-1.5">
               {SUGGESTED_ICONS.map((e) => (
                 <button
                   key={e} type="button"
                   onClick={() => setIcon(e)}
                   className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition ${
-                    icon === e ? "bg-indigo-100 ring-2 ring-indigo-500" : "bg-white border border-gray-200 hover:border-indigo-300"
+                    icon === e ? "bg-indigo-100 dark:bg-indigo-900 ring-2 ring-indigo-500" : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-indigo-300"
                   }`}
                 >
                   {e}
@@ -244,17 +241,17 @@ export default function AssetCategoryManager() {
               onChange={(e) => setIcon(e.target.value)}
               placeholder="Or type any emoji"
               maxLength={4}
-              className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-gray-600">Name</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Name</label>
             <input
               type="text" required placeholder="e.g. Cryptocurrency"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
@@ -262,26 +259,26 @@ export default function AssetCategoryManager() {
             type="button"
             onClick={() => setIsLiability((v) => !v)}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-medium transition ${
-              isLiability ? "bg-red-50 border-red-200 text-red-600" : "bg-white border-gray-200 text-gray-600"
+              isLiability ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 text-red-600" : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400"
             }`}
           >
             <span>This is a liability (debt / credit card)</span>
             <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
-              isLiability ? "bg-red-500 border-red-500" : "border-gray-300"
+              isLiability ? "bg-red-500 border-red-500" : "border-gray-300 dark:border-gray-600"
             }`}>
               {isLiability && <span className="w-2 h-2 rounded-full bg-white" />}
             </span>
           </button>
 
           {error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl px-3 py-2">{error}</p>
           )}
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => { setShowForm(false); setIsLiability(false); setIcon(""); setName(""); setError(null); }}
-              className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition"
+              className="flex-1 py-2 rounded-xl border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
             >
               Cancel
             </button>
