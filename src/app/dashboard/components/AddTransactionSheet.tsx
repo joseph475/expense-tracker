@@ -1,14 +1,43 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { X, Loader2, ChevronDown } from "lucide-react";
-import { addTransaction, type TransactionFormState } from "../transaction-actions";
+import { useEffect, useRef, useState } from "react";
+import { X, Loader2, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAppData } from "@/lib/AppDataContext";
 import type { Asset, AssetCategory, Category, TransactionType } from "@/types/database";
-
-const initialState: TransactionFormState = { error: null, success: false };
 
 function today() {
   return new Date().toISOString().split("T")[0];
+}
+
+const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+function formatDisplayDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+}
+
+function formatPickerMonth(ym: string) {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function shiftMonth(ym: string, delta: number) {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function buildCalendarDays(ym: string): (string | null)[] {
+  const [y, m] = ym.split("-").map(Number);
+  const firstDow = new Date(y, m - 1, 1).getDay();
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const cells: (string | null)[] = Array(firstDow).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push(`${ym}-${String(d).padStart(2, "0")}`);
+  }
+  return cells;
 }
 
 const CATEGORY_LABELS: Record<AssetCategory, string> = {
@@ -25,16 +54,13 @@ type ExtendedTransactionType = TransactionType | "transfer";
 export default function AddTransactionSheet({
   open,
   onClose,
-  categories,
-  assets,
-  currencySymbol = "$",
 }: {
   open: boolean;
   onClose: () => void;
-  categories: Category[];
-  assets: Asset[];
-  currencySymbol?: string;
 }) {
+  const { categories, assets, settings, addTransaction } = useAppData();
+  const currencySymbol = settings.currency_symbol;
+
   const [type, setType] = useState<ExtendedTransactionType>("expense");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<Asset | null>(null);
@@ -42,20 +68,16 @@ export default function AddTransactionSheet({
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showAccountPicker, setShowAccountPicker] = useState(false);
   const [showToAccountPicker, setShowToAccountPicker] = useState(false);
-  const [state, formAction, isPending] = useActionState(addTransaction, initialState);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(today());
+  const [pickerMonthStr, setPickerMonthStr] = useState(() => today().slice(0, 7));
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   const filteredCategories = categories.filter((c) => c.type === (type === "transfer" ? "expense" : type));
-
-  useEffect(() => {
-    if (state.success) {
-      formRef.current?.reset();
-      setSelectedCategory(null);
-      setSelectedAccount(null);
-      setSelectedToAccount(null);
-      onClose();
-    }
-  }, [state.success, onClose]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -70,6 +92,9 @@ export default function AddTransactionSheet({
       setSelectedAccount(null);
       setSelectedToAccount(null);
       setType("expense");
+      setError(null);
+      setSelectedDate(today());
+      setPickerMonthStr(today().slice(0, 7));
     }
   }, [open]);
 
@@ -78,6 +103,36 @@ export default function AddTransactionSheet({
     setSelectedAccount(null);
     setSelectedToAccount(null);
   }, [type]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const amountVal = parseFloat((form.elements.namedItem("amount") as HTMLInputElement).value);
+    const descEl = form.elements.namedItem("description") as HTMLInputElement | null;
+    const descVal = descEl?.value?.trim() || null;
+
+    setIsPending(true);
+    const err = addTransaction({
+      type,
+      amount: amountVal,
+      category_id: selectedCategory?.id ?? null,
+      account_id: selectedAccount?.id ?? "",
+      to_account_id: selectedToAccount?.id ?? null,
+      description: descVal,
+      date: selectedDate,
+    });
+    setIsPending(false);
+    if (err) {
+      setError(err);
+    } else {
+      setError(null);
+      formRef.current?.reset();
+      setSelectedCategory(null);
+      setSelectedAccount(null);
+      setSelectedToAccount(null);
+      onCloseRef.current();
+    }
+  }
 
   return (
     <div className={`${open ? 'block' : 'hidden'}`}>
@@ -99,25 +154,40 @@ export default function AddTransactionSheet({
             </button>
           </div>
 
-          <form ref={formRef} action={formAction} className="flex-1 px-4 py-3 space-y-4 overflow-y-auto">
+          <form ref={formRef} onSubmit={handleSubmit} className="flex-1 px-4 py-3 space-y-4 overflow-y-auto">
 
-            <div className="flex rounded-lg p-0.5 gap-0.5 bg-gray-100">
-              {(["expense", "income", "transfer"] as ExtendedTransactionType[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setType(t)}
-                  className={`flex-1 py-2 rounded-md text-xs font-medium capitalize transition ${
-                    type === t
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-gray-600 hover:text-gray-800 hover:bg-white"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setType("expense")}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
+                  type === "expense" ? "bg-red-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <span className="text-lg leading-none">↑</span>
+                Expense
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("income")}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
+                  type === "income" ? "bg-green-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <span className="text-lg leading-none">↓</span>
+                Income
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("transfer")}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-sm font-semibold transition active:scale-95 ${
+                  type === "transfer" ? "bg-blue-500 text-white shadow-sm" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <span className="text-lg leading-none">⇄</span>
+                Transfer
+              </button>
             </div>
-            <input type="hidden" name="type" value={type} />
 
             <div className="relative">
               <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">{currencySymbol}</span>
@@ -131,7 +201,6 @@ export default function AddTransactionSheet({
             {/* Category Picker - Hide for transfers */}
             {type !== "transfer" && (
               <div>
-                <input type="hidden" name="category_id" value={selectedCategory?.id || ""} />
                 <button
                   type="button"
                   onClick={() => setShowCategoryPicker(true)}
@@ -146,31 +215,27 @@ export default function AddTransactionSheet({
             )}
 
             {/* From Account Picker */}
-            {assets.length > 0 && (
-              <div>
-                <input type="hidden" name="account_id" value={selectedAccount?.id || ""} />
-                <button
-                  type="button"
-                  onClick={() => setShowAccountPicker(true)}
-                  className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-left"
-                >
-                  <span className={selectedAccount ? "text-gray-900" : "text-gray-400"}>
-                    {selectedAccount
-                      ? selectedAccount.name
-                      : type === "transfer"
-                        ? "From Account *"
-                        : "Select Account *"
-                    }
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </button>
-              </div>
-            )}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowAccountPicker(true)}
+                className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-left"
+              >
+                <span className={selectedAccount ? "text-gray-900" : "text-gray-400"}>
+                  {selectedAccount
+                    ? selectedAccount.name
+                    : type === "transfer"
+                      ? "From Account *"
+                      : "Select Account *"
+                  }
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
 
             {/* To Account Picker - Only for transfers */}
-            {type === "transfer" && assets.length > 0 && (
+            {type === "transfer" && (
               <div>
-                <input type="hidden" name="to_account_id" value={selectedToAccount?.id || ""} />
                 <button
                   type="button"
                   onClick={() => setShowToAccountPicker(true)}
@@ -184,10 +249,14 @@ export default function AddTransactionSheet({
               </div>
             )}
 
-            <input
-              id="date" name="date" type="date" required defaultValue={today()}
-              className="w-full px-0 py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition text-gray-900"
-            />
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(true)}
+              className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none text-left"
+            >
+              <span className="text-gray-900">{formatDisplayDate(selectedDate)}</span>
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
 
             <input
               id="description" name="description" type="text"
@@ -195,16 +264,13 @@ export default function AddTransactionSheet({
               className="w-full px-0 py-3 text-base bg-transparent border-0 border-b border-gray-300 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400"
             />
 
-            {state.error && (
+            {error && (
               <div className="p-3 bg-red-50 rounded-xl">
-                <p className="text-sm text-red-600">{state.error}</p>
+                <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
             <div className="flex gap-3 pt-4 mt-6">
-              <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-100 transition bg-gray-50">
-                Cancel
-              </button>
               <button
                 type="submit"
                 disabled={isPending ||
@@ -213,9 +279,12 @@ export default function AddTransactionSheet({
                   (type === "income" && !selectedCategory) ||
                   (type === "transfer" && !selectedToAccount)
                 }
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-base font-medium transition"
+                className="flex-3 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-base font-medium transition"
               >
                 {isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : "Save"}
+              </button>
+              <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-100 transition bg-gray-50">
+                Cancel
               </button>
             </div>
           </form>
@@ -276,15 +345,13 @@ export default function AddTransactionSheet({
                       const isLiabilityB = catB === "liability";
 
                       if (type === "expense") {
-                        // For expenses: liability categories first
                         if (isLiabilityA && !isLiabilityB) return -1;
                         if (!isLiabilityA && isLiabilityB) return 1;
                       } else if (type === "income") {
-                        // For income: non-liability categories first
                         if (!isLiabilityA && isLiabilityB) return -1;
                         if (isLiabilityA && !isLiabilityB) return 1;
                       }
-                      
+
                       return catA.localeCompare(catB);
                     });
 
@@ -342,10 +409,9 @@ export default function AddTransactionSheet({
                       const isLiabilityA = catA === "liability";
                       const isLiabilityB = catB === "liability";
 
-                      // Non-liability categories first
                       if (!isLiabilityA && isLiabilityB) return -1;
                       if (isLiabilityA && !isLiabilityB) return 1;
-                      
+
                       return catA.localeCompare(catB);
                     });
 
@@ -382,6 +448,69 @@ export default function AddTransactionSheet({
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Date Picker Bottom Sheet */}
+          {showDatePicker && (
+            <div className="fixed inset-0 z-70 bg-black/40" onClick={() => setShowDatePicker(false)}>
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900">Select Date</h3>
+                </div>
+                <div className="p-4 pb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setPickerMonthStr((m) => shiftMonth(m, -1))}
+                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <span className="text-base font-semibold text-gray-900">{formatPickerMonth(pickerMonthStr)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setPickerMonthStr((m) => shiftMonth(m, 1))}
+                      disabled={pickerMonthStr >= today().slice(0, 7)}
+                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 mb-1">
+                    {DAY_NAMES.map((d) => (
+                      <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-y-1">
+                    {buildCalendarDays(pickerMonthStr).map((dateStr, i) => {
+                      if (!dateStr) return <div key={i} />;
+                      const isFuture = dateStr > today();
+                      const isSelected = dateStr === selectedDate;
+                      return (
+                        <button
+                          key={dateStr}
+                          type="button"
+                          disabled={isFuture}
+                          onClick={() => { setSelectedDate(dateStr); setShowDatePicker(false); }}
+                          className={`mx-auto w-9 h-9 rounded-full text-sm font-medium transition flex items-center justify-center ${
+                            isSelected
+                              ? "bg-indigo-600 text-white"
+                              : isFuture
+                              ? "text-gray-300 pointer-events-none"
+                              : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                          }`}
+                        >
+                          {Number(dateStr.split("-")[2])}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

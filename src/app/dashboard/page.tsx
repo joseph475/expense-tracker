@@ -1,45 +1,23 @@
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import type { TransactionWithCategory } from "@/types/database";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useMemo, Suspense } from "react";
+import { useAppData } from "@/lib/AppDataContext";
 import DashboardFilterTabs from "./components/DashboardFilterTabs";
 import AddTransactionButton from "./components/AddTransactionButton";
-import CalendarView from "./components/CalendarView";
-import RecentTransactions from "./components/RecentTransactions";
 import DashboardStats from "./components/DashboardStats";
-import LoadingSpinner from "./components/LoadingSpinner";
-import {
-  getCachedUserSession,
-  getCachedUserSettings,
-  getCachedCategories,
-  getCachedAssets,
-  getCachedAssetValues,
-  getTransactions,
-  calculateNetWorth,
-} from "@/lib/data-fetching";
+import RecentTransactions from "./components/RecentTransactions";
+import CalendarView from "./components/CalendarView";
 
-// Enable static generation for better performance
-export const dynamic = 'force-dynamic';
-export const revalidate = 60; // Revalidate every minute
+function DashboardInner() {
+  const { transactions, assets, settings } = useAppData();
+  const params = useSearchParams();
+  const view = params.get("view") ?? "today";
+  const date = params.get("date") ?? "";
+  const month = params.get("month") ?? "";
+  const search = params.get("search") ?? "";
+  const accountsFilter = params.get("accounts") ?? "";
 
-interface DashboardPageProps {
-  searchParams: Promise<{ 
-    view?: string; 
-    date?: string; 
-    month?: string; 
-    search?: string; 
-    accounts?: string 
-  }>;
-}
-
-// Separate component for async data fetching
-async function DashboardContent({ searchParams }: DashboardPageProps) {
-  const { view = "today", date, month, search, accounts } = await searchParams;
-
-  // Get user session (cached)
-  const user = await getCachedUserSession();
-  if (!user) redirect("/auth");
-
-  // Calculate date range
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
@@ -53,142 +31,68 @@ async function DashboardContent({ searchParams }: DashboardPageProps) {
     dateFrom = date;
     dateTo = date;
   } else if (view === "calendar") {
-    // Calendar view without specific date - show current month
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const [ymYear, ymMonth] = ym.split("-").map(Number);
-    const monthStart = new Date(ymYear, ymMonth - 1, 1);
-    const monthEnd = new Date(ymYear, ymMonth, 0);
-    dateFrom = monthStart.toISOString().split("T")[0];
-    const monthEndStr = monthEnd.toISOString().split("T")[0];
-    dateTo = monthEndStr < todayStr ? monthEndStr : todayStr;
+    const [y, m] = ym.split("-").map(Number);
+    dateFrom = new Date(y, m - 1, 1).toISOString().split("T")[0];
+    const end = new Date(y, m, 0).toISOString().split("T")[0];
+    dateTo = end < todayStr ? end : todayStr;
   } else {
-    // month view — use ?month=YYYY-MM param or current month
-    const ym = month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const [ymYear, ymMonth] = ym.split("-").map(Number);
-    const monthStart = new Date(ymYear, ymMonth - 1, 1);
-    const monthEnd = new Date(ymYear, ymMonth, 0);
-    dateFrom = monthStart.toISOString().split("T")[0];
-    const monthEndStr = monthEnd.toISOString().split("T")[0];
-    dateTo = monthEndStr < todayStr ? monthEndStr : todayStr;
+    const ym = month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const [y, m] = ym.split("-").map(Number);
+    dateFrom = new Date(y, m - 1, 1).toISOString().split("T")[0];
+    const end = new Date(y, m, 0).toISOString().split("T")[0];
+    dateTo = end < todayStr ? end : todayStr;
   }
 
-  // Parallel data fetching with caching
-  const [
-    transactions,
-    assets,
-    settings,
-    categories,
-    accountAssets,
-    assetValues,
-  ] = await Promise.all([
-    getTransactions(user.id, dateFrom, dateTo),
-    getCachedAssets(user.id),
-    getCachedUserSettings(user.id),
-    getCachedCategories(user.id),
-    getCachedAssets(user.id), // For account filtering
-    getCachedAssetValues(user.id),
-  ]);
-
-  const symbol = settings?.currency_symbol ?? "$";
-  let allTx = transactions;
-
-  // Apply search filter
-  if (search) {
-    const searchLower = search.toLowerCase();
-    allTx = allTx.filter(tx =>
-      tx.description?.toLowerCase().includes(searchLower) ||
-      tx.category?.name?.toLowerCase().includes(searchLower) ||
-      (tx as any).account?.name?.toLowerCase().includes(searchLower) ||
-      (tx as any).to_account?.name?.toLowerCase().includes(searchLower)
-    );
-  }
-
-  // Apply account filter
-  if (accounts) {
-    const accountIds = accounts.split(',').filter(Boolean);
-    if (accountIds.length > 0) {
-      allTx = allTx.filter(tx =>
-        (tx.account_id && accountIds.includes(tx.account_id)) ||
-        (tx.to_account_id && accountIds.includes(tx.to_account_id))
+  const filteredTx = useMemo(() => {
+    let tx = transactions.filter(t => t.date >= dateFrom && t.date <= dateTo);
+    if (search) {
+      const q = search.toLowerCase();
+      tx = tx.filter(t =>
+        t.description?.toLowerCase().includes(q) ||
+        t.category?.name?.toLowerCase().includes(q) ||
+        t.account?.name?.toLowerCase().includes(q)
       );
     }
-  }
+    if (accountsFilter) {
+      const ids = accountsFilter.split(",").filter(Boolean);
+      if (ids.length > 0) {
+        tx = tx.filter(t =>
+          (t.account_id && ids.includes(t.account_id)) ||
+          (t.to_account_id && ids.includes(t.to_account_id))
+        );
+      }
+    }
+    return tx;
+  }, [transactions, dateFrom, dateTo, search, accountsFilter]);
 
-  // Calculate net worth using cached function
-  const netWorth = calculateNetWorth(assetValues);
 
-  // Top 5 expense categories for the period (memoized)
-  const categoryTotals = allTx
-    .filter((t) => t.type === "expense" && t.category_id && t.category)
-    .reduce<Record<string, { name: string; icon: string; total: number }>>(
-      (acc, t) => {
-        const id = t.category_id!;
-        if (!acc[id]) acc[id] = { name: t.category!.name, icon: t.category!.icon, total: 0 };
-        acc[id].total += Number(t.amount);
-        return acc;
-      },
-      {}
-    );
-
-  const topCategories = Object.values(categoryTotals)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5);
+  const symbol = settings.currency_symbol;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto bg-white min-h-screen">
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-          <DashboardFilterTabs assets={accountAssets} />
+          <DashboardFilterTabs assets={assets} />
         </div>
-
         <div className="p-4 space-y-6">
-          {/* Stats Section with Suspense */}
-          <Suspense fallback={<LoadingSpinner size="sm" />}>
-            <DashboardStats 
-              transactions={allTx} 
-              netWorth={netWorth} 
-              symbol={symbol} 
-            />
-          </Suspense>
-
-          {/* Main Content */}
+          {view !== "calendar" && <DashboardStats transactions={filteredTx} symbol={symbol} />}
           {view === "calendar" ? (
-            <Suspense fallback={<LoadingSpinner />}>
-              <CalendarView
-                transactions={allTx}
-                symbol={symbol}
-                currentDate={date || todayStr}
-              />
-            </Suspense>
+            <CalendarView transactions={filteredTx} symbol={symbol} currentDate={date || todayStr} />
           ) : (
-            <Suspense fallback={<LoadingSpinner />}>
-              <RecentTransactions
-                transactions={allTx}
-                currencySymbol={symbol}
-              />
-            </Suspense>
+            <RecentTransactions transactions={filteredTx} currencySymbol={symbol} />
           )}
         </div>
-
-        {/* Floating Action Button */}
-        <AddTransactionButton
-          categories={categories}
-          assets={assets}
-          currencySymbol={symbol}
-        />
+        <AddTransactionButton />
       </div>
     </div>
   );
 }
 
-export default async function DashboardPage(props: DashboardPageProps) {
+export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    }>
-      <DashboardContent {...props} />
+    <Suspense>
+      <DashboardInner />
     </Suspense>
   );
 }

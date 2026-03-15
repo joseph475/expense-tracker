@@ -1,18 +1,9 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Plus, Trash2, Loader2, Pencil, Check, X } from "lucide-react";
 import type { AssetCategoryRow } from "@/types/database";
-import {
-  addAssetCategory,
-  deleteAssetCategory,
-  updateAssetCategory,
-  type AssetCategoryFormState,
-  type UpdateAssetCategoryState,
-} from "../actions";
-
-const initialAdd: AssetCategoryFormState = { error: null, success: false };
-const initialEdit: UpdateAssetCategoryState = { error: null, success: false };
+import { useAppData } from "@/lib/AppDataContext";
 
 const SUGGESTED_ICONS = ["🏦","💰","📈","🏠","🚗","💳","📦","🏆","💎","🪙","🏗️","✈️","🚢","🎨","💼"];
 
@@ -23,21 +14,22 @@ function EditForm({
   cat: AssetCategoryRow;
   onDone: () => void;
 }) {
-  const [state, formAction, isPending] = useActionState(updateAssetCategory, initialEdit);
+  const { updateAssetCategory } = useAppData();
   const [icon, setIcon] = useState(cat.icon);
   const [isLiability, setIsLiability] = useState(cat.is_liability);
-  const onDoneRef = useRef(onDone);
-  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
+  const [name, setName] = useState(cat.name);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (state.success) onDoneRef.current();
-  }, [state.success]);
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setError("Name is required."); return; }
+    if (!icon.trim()) { setError("Please enter an emoji icon."); return; }
+    updateAssetCategory(cat.id, { name: name.trim(), icon: icon.trim(), is_liability: isLiability });
+    onDone();
+  }
 
   return (
-    <form action={formAction} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-      <input type="hidden" name="id" value={cat.id} />
-      <input type="hidden" name="is_liability" value={String(isLiability)} />
-
+    <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
       {/* Icon picker */}
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-gray-600">Icon</label>
@@ -55,7 +47,6 @@ function EditForm({
           ))}
         </div>
         <input
-          name="icon"
           value={icon}
           onChange={(e) => setIcon(e.target.value)}
           placeholder="Or type any emoji"
@@ -68,7 +59,9 @@ function EditForm({
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-gray-600">Name</label>
         <input
-          name="name" type="text" required defaultValue={cat.name}
+          type="text" required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         />
       </div>
@@ -89,8 +82,8 @@ function EditForm({
         </span>
       </button>
 
-      {state.error && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{state.error}</p>
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
       )}
 
       <div className="flex gap-2">
@@ -103,10 +96,9 @@ function EditForm({
         </button>
         <button
           type="submit"
-          disabled={isPending}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition"
         >
-          {isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</> : <><Check className="h-3.5 w-3.5" />Save</>}
+          <Check className="h-3.5 w-3.5" />Save
         </button>
       </div>
     </form>
@@ -163,32 +155,34 @@ function CategoryPill({
   );
 }
 
-export default function AssetCategoryManager({
-  categories,
-  userId,
-}: {
-  categories: AssetCategoryRow[];
-  userId: string;
-}) {
+export default function AssetCategoryManager() {
+  const { assetCategories, userId, addAssetCategory, deleteAssetCategory } = useAppData();
   const [showForm, setShowForm] = useState(false);
   const [icon, setIcon] = useState("");
+  const [name, setName] = useState("");
   const [isLiability, setIsLiability] = useState(false);
-  const [state, formAction, isPending] = useActionState(addAssetCategory, initialAdd);
+  const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const defaults = categories.filter((c) => c.user_id === null);
-  const custom = categories.filter((c) => c.user_id === userId);
+  const defaults = assetCategories.filter((c) => c.user_id === null);
+  const custom = assetCategories.filter((c) => c.user_id === userId);
 
-  async function handleDelete(id: string) {
+  function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteAssetCategory(id);
+    deleteAssetCategory(id);
     setDeletingId(null);
   }
 
-  if (state.success && showForm) {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setError("Category name is required."); return; }
+    if (!icon.trim()) { setError("Please enter an emoji icon."); return; }
+    addAssetCategory({ name: name.trim(), icon: icon.trim(), is_liability: isLiability });
     setShowForm(false);
     setIcon("");
+    setName("");
     setIsLiability(false);
+    setError(null);
   }
 
   return (
@@ -229,9 +223,7 @@ export default function AssetCategoryManager({
 
       {/* Add form */}
       {showForm ? (
-        <form action={formAction} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-          <input type="hidden" name="is_liability" value={String(isLiability)} />
-
+        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-600">Icon</label>
             <div className="flex flex-wrap gap-1.5">
@@ -248,7 +240,6 @@ export default function AssetCategoryManager({
               ))}
             </div>
             <input
-              name="icon"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               placeholder="Or type any emoji"
@@ -260,7 +251,9 @@ export default function AssetCategoryManager({
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-600">Name</label>
             <input
-              name="name" type="text" required placeholder="e.g. Cryptocurrency"
+              type="text" required placeholder="e.g. Cryptocurrency"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
@@ -280,24 +273,23 @@ export default function AssetCategoryManager({
             </span>
           </button>
 
-          {state.error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{state.error}</p>
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
           )}
 
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => { setShowForm(false); setIsLiability(false); setIcon(""); }}
+              onClick={() => { setShowForm(false); setIsLiability(false); setIcon(""); setName(""); setError(null); }}
               className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isPending}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition"
             >
-              {isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</> : "Save"}
+              Save
             </button>
           </div>
         </form>

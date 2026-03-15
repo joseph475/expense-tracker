@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import type { AssetWithCategory, TransactionWithCategory } from "@/types/database";
+"use client";
+
+import { useAppData } from "@/lib/AppDataContext";
+import type { AssetWithCategory } from "@/types/database";
 
 const LEGACY_LABELS: Record<string, string> = {
   cash: "Cash / Bank", investment: "Investment", property: "Property",
@@ -10,36 +11,10 @@ const LEGACY_ICONS: Record<string, string> = {
   cash: "🏦", investment: "📈", property: "🏠", vehicle: "🚗", liability: "💳", other: "📦",
 };
 
-export default async function BalancePage() {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) redirect("/auth");
+export default function BalancePage() {
+  const { transactions, assets, settings } = useAppData();
+  const symbol = settings.currency_symbol;
 
-  const [{ data: rawTx }, { data: rawAssets }, { data: settings }] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select("*, category:categories(*)")
-      .eq("user_id", user!.id)
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("assets")
-      .select("*, assetCategory:asset_categories(id, name, icon, is_liability)")
-      .eq("user_id", user!.id)
-      .order("name"),
-    supabase
-      .from("user_settings")
-      .select("currency_symbol")
-      .eq("user_id", user!.id)
-      .single(),
-  ]);
-
-  const symbol = settings?.currency_symbol ?? "$";
-  const transactions = (rawTx ?? []) as (TransactionWithCategory & { account_id: string | null })[];
-  const assets = (rawAssets ?? []) as AssetWithCategory[];
-
-  // Helpers to get category info per asset
   function assetGroupKey(a: AssetWithCategory) {
     return a.asset_category_id ?? a.category;
   }
@@ -60,7 +35,6 @@ export default async function BalancePage() {
     if (!seenGroups.has(key)) seenGroups.set(key, { label: assetGroupLabel(a), assets: [] });
     seenGroups.get(key)!.assets.push(a);
   }
-  // Sort: non-liabilities first
   const groupedAssets = [...seenGroups.entries()]
     .sort(([, a], [, b]) => {
       const aLiab = assetIsLiability(a.assets[0]);
@@ -72,7 +46,7 @@ export default async function BalancePage() {
 
   const allCols = groupedAssets.flatMap((g) => g.assets);
 
-  // Per-account balance
+  // Per-account balance from transactions
   const accountBalance = new Map<string, number>();
   for (const t of transactions) {
     if (!t.account_id) continue;

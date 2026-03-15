@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Transaction, Category } from "@/types/database";
-import { formatCurrency } from "@/lib/currency";
 import PieChart from "./PieChart";
 import { ChevronDown } from "lucide-react";
 
@@ -29,26 +28,8 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
   const [activeTab, setActiveTab] = useState<ChartType>("expense");
   
   // Bottom sheet states
-  const [showPeriodPicker, setShowPeriodPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
-
-  // Close pickers when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Element;
-      if (!target.closest('.picker-container') && !target.closest('.bottom-sheet')) {
-        setShowPeriodPicker(false);
-        setShowMonthPicker(false);
-        setShowYearPicker(false);
-      }
-    }
-
-    if (showPeriodPicker || showMonthPicker || showYearPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showPeriodPicker, showMonthPicker, showYearPicker]);
 
   // Filter transactions based on selected period
   const filteredTransactions = useMemo(() => {
@@ -143,175 +124,112 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
   const currentData = activeTab === "expense" ? expenseData : incomeData;
   const currentTotal = currentData.reduce((sum, item) => sum + item.value, 0);
 
-  // Get display labels
-  const getPeriodLabel = () => {
-    switch (filterPeriod) {
-      case "month": return "This Month";
-      case "year": return "This Year";
-      case "all": return "All Time";
-      default: return "This Month";
-    }
-  };
-
   const getMonthLabel = () => {
     const [year, monthNum] = selectedMonth.split("-");
     return new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold text-gray-900 mb-3">Statistics</h1>
-          
-          {/* Filter Controls */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {/* Period Filter */}
-            <div className="relative picker-container">
-              <button
-                onClick={() => setShowPeriodPicker(true)}
-                className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 flex items-center gap-1"
-              >
-                {getPeriodLabel()}
-                <ChevronDown className="h-3 w-3 text-gray-400" />
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
 
-            {/* Month Filter */}
-            {filterPeriod === "month" && (
-              <div className="relative picker-container">
-                <button
-                  onClick={() => setShowMonthPicker(true)}
-                  className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 flex items-center gap-1"
-                >
-                  {getMonthLabel()}
-                  <ChevronDown className="h-3 w-3 text-gray-400" />
-                </button>
-              </div>
-            )}
-
-            {/* Year Filter */}
-            {filterPeriod === "year" && (
-              <div className="relative picker-container">
-                <button
-                  onClick={() => setShowYearPicker(true)}
-                  className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 flex items-center gap-1"
-                >
-                  {selectedYear}
-                  <ChevronDown className="h-3 w-3 text-gray-400" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab("expense")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "expense"
-                  ? "border-red-500 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Expenses
-            </button>
-            <button
-              onClick={() => setActiveTab("income")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "income"
-                  ? "border-green-500 text-green-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Income
-            </button>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          {currentData.length > 0 ? (
-            <PieChart data={currentData} currencyCode={currencyCode} />
-          ) : (
-            <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
-              No {activeTab} data for selected period
-            </div>
-          )}
-        </div>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <h1 className="text-lg font-bold text-gray-900">Statistics</h1>
+        <p className="text-xs text-gray-500">Breakdown by category</p>
       </div>
 
-      {/* Period Picker Bottom Sheet */}
-      {showPeriodPicker && (
-        <div className="fixed inset-0 flex items-end z-50">
-          <div className="bg-white w-full p-4 bottom-sheet">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Select Period</h3>
-              <button
-                onClick={() => setShowPeriodPicker(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-2">
-              {[
-                { value: "month", label: "This Month" },
-                { value: "year", label: "This Year" },
-                { value: "all", label: "All Time" }
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    setFilterPeriod(option.value as FilterPeriod);
-                    setShowPeriodPicker(false);
-                  }}
-                  className={`w-full text-left p-3 rounded-lg ${
-                    filterPeriod === option.value
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+<div className="bg-white">
+      {/* Expense / Income tabs */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab("expense")}
+          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+            activeTab === "expense" ? "text-red-500" : "text-gray-400"
+          }`}
+        >
+          Expenses
+          {activeTab === "expense" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("income")}
+          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+            activeTab === "income" ? "text-green-500" : "text-gray-400"
+          }`}
+        >
+          Income
+          {activeTab === "income" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-full" />
+          )}
+        </button>
+      </div>
+
+      {/* Period filter row */}
+      <div className="flex items-center gap-2 px-4 py-3">
+        {(["month", "year", "all"] as FilterPeriod[]).map((p) => (
+          <button
+            key={p}
+            onClick={() => setFilterPeriod(p)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              filterPeriod === p
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            {p === "month" ? "Month" : p === "year" ? "Year" : "All time"}
+          </button>
+        ))}
+
+        {(filterPeriod === "month" || filterPeriod === "year") && (
+          <>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              onClick={() => filterPeriod === "month" ? setShowMonthPicker(true) : setShowYearPicker(true)}
+              className="flex items-center gap-1 text-xs font-semibold text-gray-700"
+            >
+              {filterPeriod === "month" ? getMonthLabel() : selectedYear}
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Chart */}
+      <div className="px-4">
+        {currentData.length > 0 ? (
+          <PieChart data={currentData} currencyCode={currencyCode} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <span className="text-3xl mb-3">📊</span>
+            <p className="text-sm font-medium text-gray-500">No {activeTab} data</p>
+            <p className="text-xs text-gray-400 mt-1">for the selected period</p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      </div>
 
       {/* Month Picker Bottom Sheet */}
       {showMonthPicker && (
-        <div className="fixed inset-0 flex items-end z-50">
-          <div className="bg-white w-full p-4 max-h-96 overflow-y-auto bottom-sheet">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Select Month</h3>
-              <button
-                onClick={() => setShowMonthPicker(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowMonthPicker(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Select Month</h3>
             </div>
-            <div className="space-y-2">
+            <div className="overflow-y-auto max-h-72 p-4 space-y-1 pb-8">
               {availableMonths.map(month => {
                 const [year, monthNum] = month.split("-");
-                const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const label = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                const isSelected = selectedMonth === month;
                 return (
                   <button
                     key={month}
-                    onClick={() => {
-                      setSelectedMonth(month);
-                      setShowMonthPicker(false);
-                    }}
-                    className={`w-full text-left p-3 rounded-lg ${
-                      selectedMonth === month
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    onClick={() => { setSelectedMonth(month); setShowMonthPicker(false); }}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
+                      isSelected ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                     }`}
                   >
-                    {monthName}
+                    {label}
                   </button>
                 );
               })}
@@ -322,34 +240,26 @@ export default function StatsClient({ transactions, categories, currencyCode }: 
 
       {/* Year Picker Bottom Sheet */}
       {showYearPicker && (
-        <div className="fixed inset-0 flex items-end z-50">
-          <div className="bg-white w-full p-4 bottom-sheet">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Select Year</h3>
-              <button
-                onClick={() => setShowYearPicker(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowYearPicker(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Select Year</h3>
             </div>
-            <div className="space-y-2">
-              {availableYears.map(year => (
-                <button
-                  key={year}
-                  onClick={() => {
-                    setSelectedYear(year);
-                    setShowYearPicker(false);
-                  }}
-                  className={`w-full text-left p-3 rounded-lg ${
-                    selectedYear === year
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {year}
-                </button>
-              ))}
+            <div className="p-4 space-y-1 pb-8">
+              {availableYears.map(year => {
+                const isSelected = selectedYear === year;
+                return (
+                  <button
+                    key={year}
+                    onClick={() => { setSelectedYear(year); setShowYearPicker(false); }}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition ${
+                      isSelected ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

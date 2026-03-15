@@ -1,20 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import type { TransactionWithCategory } from "@/types/database";
-
-interface Asset {
-  id: string;
-  name: string;
-  current_value: number;
-  asset_categories?: {
-    name: string;
-    icon: string;
-    is_liability: boolean;
-  };
-}
+import { useAppData } from "@/lib/AppDataContext";
 
 interface TransactionDetailsModalProps {
   transactionId: string | null;
@@ -23,61 +10,14 @@ interface TransactionDetailsModalProps {
   currencySymbol: string;
 }
 
-interface TransactionWithAssets extends TransactionWithCategory {
-  account?: Asset;
-  to_account?: Asset;
-}
-
 export default function TransactionDetailsModal({
   transactionId,
   isOpen,
   onClose,
   currencySymbol,
 }: TransactionDetailsModalProps) {
-  const [transaction, setTransaction] = useState<TransactionWithAssets | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!transactionId || !isOpen) {
-      setTransaction(null);
-      return;
-    }
-
-    const fetchTransactionDetails = async () => {
-      setLoading(true);
-      const supabase = createClient();
-
-      const { data, error } = await supabase
-        .from("transactions")
-        .select(`
-          *,
-          category:categories(*),
-          account:assets!account_id(
-            id,
-            name,
-            current_value,
-            asset_categories(name, icon, is_liability)
-          ),
-          to_account:assets!to_account_id(
-            id,
-            name,
-            current_value,
-            asset_categories(name, icon, is_liability)
-          )
-        `)
-        .eq("id", transactionId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching transaction details:", error);
-      } else {
-        setTransaction(data as TransactionWithAssets);
-      }
-      setLoading(false);
-    };
-
-    fetchTransactionDetails();
-  }, [transactionId, isOpen]);
+  const { transactions } = useAppData();
+  const transaction = transactionId ? transactions.find(t => t.id === transactionId) ?? null : null;
 
   if (!isOpen) return null;
 
@@ -98,14 +38,7 @@ export default function TransactionDetailsModal({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-500">Loading transaction details...</p>
-                </div>
-              </div>
-            ) : transaction ? (
+            {transaction ? (
               <div className="space-y-6">
                 {/* Transaction Type & Amount */}
                 <div className="text-center">
@@ -141,7 +74,7 @@ export default function TransactionDetailsModal({
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs font-medium text-gray-500 mb-1">Date</p>
                     <p className="text-sm text-gray-900">
-                      {new Date(transaction.date).toLocaleDateString('en-US', {
+                      {new Date(transaction.date + "T00:00:00").toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -153,13 +86,12 @@ export default function TransactionDetailsModal({
                   {/* Account Information */}
                   {transaction.type === "transfer" ? (
                     <>
-                      {/* From Account */}
                       {transaction.account && (
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-xs font-medium text-gray-500 mb-1">From Account</p>
                           <div className="flex items-center gap-2">
                             <span className="text-lg">
-                              {transaction.account.asset_categories?.icon || "💰"}
+                              {transaction.account.assetCategory?.icon || "💰"}
                             </span>
                             <span className="text-sm font-medium text-gray-900">
                               {transaction.account.name}
@@ -168,13 +100,12 @@ export default function TransactionDetailsModal({
                         </div>
                       )}
 
-                      {/* To Account */}
                       {transaction.to_account && (
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-xs font-medium text-gray-500 mb-1">To Account</p>
                           <div className="flex items-center gap-2">
                             <span className="text-lg">
-                              {transaction.to_account.asset_categories?.icon || "💰"}
+                              {transaction.to_account.assetCategory?.icon || "💰"}
                             </span>
                             <span className="text-sm font-medium text-gray-900">
                               {transaction.to_account.name}
@@ -184,13 +115,12 @@ export default function TransactionDetailsModal({
                       )}
                     </>
                   ) : (
-                    /* Single Account for Income/Expense */
                     transaction.account && (
                       <div className="bg-gray-50 rounded-lg p-3">
                         <p className="text-xs font-medium text-gray-500 mb-1">Account</p>
                         <div className="flex items-center gap-2">
                           <span className="text-lg">
-                            {transaction.account.asset_categories?.icon || "💰"}
+                            {transaction.account.assetCategory?.icon || "💰"}
                           </span>
                           <span className="text-sm font-medium text-gray-900">
                             {transaction.account.name}

@@ -1,61 +1,67 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Plus, Trash2, Lock, Loader2 } from "lucide-react";
-import type { Category, CategoryType } from "@/types/database";
-import { addCategory, deleteCategory, type CategoryFormState } from "../actions";
-
-const initialState: CategoryFormState = { error: null, success: false };
+import type { CategoryType } from "@/types/database";
+import { useAppData } from "@/lib/AppDataContext";
 
 const SUGGESTED_ICONS = {
   expense: ["🍔","🚌","🏠","🎬","💊","👕","⚡","📱","🎓","✈️","🐶","🛒","🍺","💇","🏋️"],
   income:  ["💼","💻","📈","🎁","💰","🏦","🎨","📦","🤝","🏆"],
 };
 
-export default function CategoryManager({
-  categories,
-  userId,
-}: {
-  categories: Category[];
-  userId: string;
-}) {
+export default function CategoryManager() {
+  const { categories, userId, addCategory, deleteCategory } = useAppData();
   const [tab, setTab] = useState<CategoryType>("expense");
   const [showForm, setShowForm] = useState(false);
   const [icon, setIcon] = useState("");
-  const [state, formAction, isPending] = useActionState(addCategory, initialState);
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filtered = categories.filter((c) => c.type === tab);
   const defaults = filtered.filter((c) => c.user_id === null);
   const custom = filtered.filter((c) => c.user_id === userId);
 
-  async function handleDelete(id: string) {
+  function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteCategory(id);
+    deleteCategory(id);
     setDeletingId(null);
   }
 
-  // Close form on success
-  if (state.success && showForm) {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setError("Category name is required."); return; }
+    if (!icon.trim()) { setError("Please enter an emoji icon."); return; }
+    addCategory({ name: name.trim(), icon: icon.trim(), type: tab });
     setShowForm(false);
     setIcon("");
+    setName("");
+    setError(null);
   }
 
   return (
     <div className="space-y-4">
       {/* Type tabs */}
-      <div className="flex rounded-xl border border-gray-200 p-1 gap-1">
-        {(["expense", "income"] as CategoryType[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setShowForm(false); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition ${
-              tab === t ? "bg-indigo-600 text-white shadow" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {t === "expense" ? "💸 Expense" : "💰 Income"}
-          </button>
-        ))}
+      <div className="flex border-b border-gray-200 -mx-4 px-4">
+        <button
+          onClick={() => { setTab("expense"); setShowForm(false); }}
+          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+            tab === "expense" ? "text-red-500" : "text-gray-400"
+          }`}
+        >
+          Expense
+          {tab === "expense" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />}
+        </button>
+        <button
+          onClick={() => { setTab("income"); setShowForm(false); }}
+          className={`flex-1 py-2.5 text-sm font-semibold transition relative ${
+            tab === "income" ? "text-green-500" : "text-gray-400"
+          }`}
+        >
+          Income
+          {tab === "income" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-full" />}
+        </button>
       </div>
 
       {/* Default categories */}
@@ -103,9 +109,7 @@ export default function CategoryManager({
 
       {/* Add form */}
       {showForm ? (
-        <form action={formAction} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-          <input type="hidden" name="type" value={tab} />
-
+        <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
           {/* Icon picker */}
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-600">Icon</label>
@@ -123,7 +127,6 @@ export default function CategoryManager({
               ))}
             </div>
             <input
-              name="icon"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               placeholder="Or type any emoji"
@@ -136,21 +139,23 @@ export default function CategoryManager({
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-gray-600">Name</label>
             <input
-              name="name" type="text" required placeholder="e.g. Coffee"
+              type="text" required placeholder="e.g. Coffee"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
-          {state.error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{state.error}</p>
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
           )}
 
           <div className="flex gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition">
+            <button type="button" onClick={() => { setShowForm(false); setError(null); }} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition">
               Cancel
             </button>
-            <button type="submit" disabled={isPending} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition">
-              {isPending ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</> : "Save"}
+            <button type="submit" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition">
+              Save
             </button>
           </div>
         </form>

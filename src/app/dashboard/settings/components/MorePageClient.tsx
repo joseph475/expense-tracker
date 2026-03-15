@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { ChevronRight, X } from "lucide-react";
 import { logout } from "@/app/dashboard/actions";
+import { useAppData } from "@/lib/AppDataContext";
 import CategoryManager from "../../categories/components/CategoryManager";
 import AssetCategoryManager from "../../categories/components/AssetCategoryManager";
 import SettingsForm from "./SettingsForm";
-import type { AssetCategoryRow, Category } from "@/types/database";
 
 type Sheet = "tx_categories" | "asset_categories" | "currency" | null;
 
@@ -48,19 +48,8 @@ function BottomSheet({
   );
 }
 
-export default function MorePageClient({
-  email,
-  categories,
-  assetCategories,
-  currencyCode,
-  userId,
-}: {
-  email: string;
-  categories: Category[];
-  assetCategories: AssetCategoryRow[];
-  currencyCode: string;
-  userId: string;
-}) {
+export default function MorePageClient() {
+  const { userEmail, settings } = useAppData();
   const [sheet, setSheet] = useState<Sheet>(null);
 
   const menuItems = [
@@ -80,7 +69,7 @@ export default function MorePageClient({
       key: "currency" as Sheet,
       icon: "💱",
       label: "Currency",
-      description: currencyCode,
+      description: settings.currency_code,
     },
   ];
 
@@ -96,11 +85,11 @@ export default function MorePageClient({
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
             <span className="text-lg font-bold text-indigo-600">
-              {email.charAt(0).toUpperCase()}
+              {userEmail.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{email}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{userEmail}</p>
             <p className="text-xs text-gray-500">Signed in</p>
           </div>
         </div>
@@ -140,15 +129,15 @@ export default function MorePageClient({
 
       {/* Sheets */}
       <BottomSheet title="Transaction Categories" open={sheet === "tx_categories"} onClose={() => setSheet(null)}>
-        <CategoryManager categories={categories} userId={userId} />
+        <CategoryManager />
       </BottomSheet>
 
       <BottomSheet title="Account Categories" open={sheet === "asset_categories"} onClose={() => setSheet(null)}>
-        <AssetCategoryManager categories={assetCategories} userId={userId} />
+        <AssetCategoryManager />
       </BottomSheet>
 
       <BottomSheet title="Currency" open={sheet === "currency"} onClose={() => setSheet(null)}>
-        <SettingsForm currentCode={currencyCode} />
+        <SettingsForm currentCode={settings.currency_code} />
       </BottomSheet>
     </div>
   );

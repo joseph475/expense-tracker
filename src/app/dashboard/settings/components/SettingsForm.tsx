@@ -1,24 +1,28 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
 import { CURRENCIES } from "@/lib/currency";
-import { saveSettings, type SettingsState } from "../actions";
-
-const initialState: SettingsState = { error: null, success: false };
+import { useAppData } from "@/lib/AppDataContext";
 
 export default function SettingsForm({ currentCode }: { currentCode: string }) {
+  const { updateSettings } = useAppData();
   const [selected, setSelected] = useState(currentCode);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(saveSettings, initialState);
+  const [saved, setSaved] = useState(false);
 
   const current = CURRENCIES.find((c) => c.code === selected) ?? CURRENCIES[0];
 
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    updateSettings({ currency_code: current.code, currency_symbol: current.symbol });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
   return (
     <>
-      <form action={formAction} className="space-y-3">
-        <input type="hidden" name="currency_code" value={selected} />
-
+      <form onSubmit={handleSave} className="space-y-3">
         {/* Compact current value row */}
         <button
           type="button"
@@ -33,12 +37,7 @@ export default function SettingsForm({ currentCode }: { currentCode: string }) {
           <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
         </button>
 
-        {state.error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
-            {state.error}
-          </p>
-        )}
-        {state.success && (
+        {saved && (
           <p className="text-sm text-green-700 bg-green-50 rounded-xl px-3 py-2">
             Settings saved!
           </p>
@@ -46,10 +45,9 @@ export default function SettingsForm({ currentCode }: { currentCode: string }) {
 
         <button
           type="submit"
-          disabled={isPending}
-          className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-base font-medium transition"
+          className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-base font-medium transition"
         >
-          {isPending ? "Saving..." : "Save"}
+          Save
         </button>
       </form>
 

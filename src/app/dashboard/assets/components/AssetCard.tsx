@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2, Check, X, TrendingUp } from "lucide-react";
 import type { AssetWithCategory } from "@/types/database";
-import { updateAssetValue, deleteAsset } from "../actions";
+import { useAppData } from "@/lib/AppDataContext";
 
 const LEGACY_ICONS: Record<string, string> = {
   cash: "🏦", investment: "📈", property: "🏠", vehicle: "🚗", liability: "💳", other: "📦",
@@ -38,10 +38,10 @@ export default function AssetCard({
   asset: AssetWithCategory;
   currencySymbol: string;
 }) {
+  const { updateAssetValue, deleteAsset } = useAppData();
   const [editing, setEditing] = useState(false);
   const [newValue, setNewValue] = useState(String(asset.current_value));
   const [confirming, setConfirming] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const { projected, earned, daily } = calcProjected(asset);
   const hasInterest = !!asset.interest_rate && asset.interest_rate > 0;
@@ -49,29 +49,24 @@ export default function AssetCard({
   const categoryIcon = asset.assetCategory?.icon ?? LEGACY_ICONS[asset.category] ?? "📦";
   const categoryName = asset.assetCategory?.name ?? asset.category;
 
-  async function handleSave() {
+  function handleSave() {
     const val = parseFloat(newValue);
     if (isNaN(val) || val < 0) return;
-    setLoading(true);
-    await updateAssetValue(asset.id, val);
+    updateAssetValue(asset.id, val);
     setEditing(false);
-    setLoading(false);
   }
 
-  async function handleApplyInterest() {
-    setLoading(true);
-    await updateAssetValue(asset.id, parseFloat(projected.toFixed(2)));
-    setLoading(false);
+  function handleApplyInterest() {
+    updateAssetValue(asset.id, parseFloat(projected.toFixed(2)));
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!confirming) {
       setConfirming(true);
       setTimeout(() => setConfirming(false), 3000);
       return;
     }
-    setLoading(true);
-    await deleteAsset(asset.id);
+    deleteAsset(asset.id);
   }
 
   return (
@@ -100,7 +95,7 @@ export default function AssetCard({
                 autoFocus
               />
             </div>
-            <button onClick={handleSave} disabled={loading} className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
+            <button onClick={handleSave} className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition">
               <Check className="h-3.5 w-3.5" />
             </button>
             <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
@@ -123,7 +118,7 @@ export default function AssetCard({
               <Pencil className="h-3.5 w-3.5" />
             </button>
             <button
-              onClick={handleDelete} disabled={loading}
+              onClick={handleDelete}
               className={`p-1.5 rounded-lg text-xs transition ${confirming ? "bg-red-100 text-red-600 font-medium px-2" : "text-gray-300 hover:text-red-400 hover:bg-red-50"}`}
             >
               {confirming ? "Sure?" : <Trash2 className="h-3.5 w-3.5" />}
@@ -151,7 +146,6 @@ export default function AssetCard({
           {earned >= 0.01 && (
             <button
               onClick={handleApplyInterest}
-              disabled={loading}
               className="text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-2.5 py-1 rounded-lg transition"
             >
               Apply

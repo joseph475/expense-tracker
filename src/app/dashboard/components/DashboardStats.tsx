@@ -1,16 +1,13 @@
-import { Suspense } from "react";
-import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
-import { formatCurrency } from "@/lib/currency";
-import LoadingSpinner from "./LoadingSpinner";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { formatAmount } from "@/lib/currency";
 import type { TransactionWithCategory } from "@/types/database";
 
 interface DashboardStatsProps {
   transactions: TransactionWithCategory[];
-  netWorth: number;
   symbol: string;
 }
 
-function StatsContent({ transactions, netWorth, symbol }: DashboardStatsProps) {
+function StatsContent({ transactions, symbol }: DashboardStatsProps) {
   const totalIncome = transactions
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount), 0);
@@ -19,47 +16,36 @@ function StatsContent({ transactions, netWorth, symbol }: DashboardStatsProps) {
     .filter((t) => t.type === "expense")
     .reduce((s, t) => s + Number(t.amount), 0);
 
-  const netBalance = totalIncome - totalExpenses;
+  const total = totalIncome - totalExpenses;
 
   return (
-    <div className="grid grid-cols-3 gap-3 mb-6">
-      <div className="bg-white p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-1">
-          <ArrowUpRight className="h-4 w-4 text-green-600" />
-          <span className="text-xs text-gray-600">Income</span>
+    <div className="flex mb-4">
+      <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
+        <div className="flex items-center gap-1">
+          <ArrowUpRight className="h-3 w-3 text-green-600" />
+          <span className="text-xs text-gray-400">In</span>
         </div>
-        <p className="text-lg font-semibold text-green-600">
-          {formatCurrency(totalIncome, symbol)}
-        </p>
+        <span className="text-sm font-semibold text-green-600">{formatAmount(totalIncome, symbol)}</span>
       </div>
-
-      <div className="bg-white p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-1">
-          <ArrowDownLeft className="h-4 w-4 text-red-600" />
-          <span className="text-xs text-gray-600">Expenses</span>
+      <div className="w-px bg-gray-100" />
+      <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
+        <div className="flex items-center gap-1">
+          <ArrowDownLeft className="h-3 w-3 text-red-400" />
+          <span className="text-xs text-gray-400">Out</span>
         </div>
-        <p className="text-lg font-semibold text-red-600">
-          {formatCurrency(totalExpenses, symbol)}
-        </p>
+        <span className="text-sm font-semibold text-red-400">{formatAmount(totalExpenses, symbol)}</span>
       </div>
-
-      <div className="bg-white p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="h-4 w-4 text-blue-600" />
-          <span className="text-xs text-gray-600">Net Worth</span>
-        </div>
-        <p className={`text-lg font-semibold ${netWorth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {formatCurrency(netWorth, symbol)}
-        </p>
+      <div className="w-px bg-gray-100" />
+      <div className="flex flex-1 flex-col items-center gap-0.5 py-2">
+        <span className="text-xs text-gray-400">Total</span>
+        <span className={`text-sm font-semibold ${total >= 0 ? "text-gray-900" : "text-red-500"}`}>
+          {formatAmount(total, symbol)}
+        </span>
       </div>
     </div>
   );
 }
 
 export default function DashboardStats(props: DashboardStatsProps) {
-  return (
-    <Suspense fallback={<LoadingSpinner size="sm" />}>
-      <StatsContent {...props} />
-    </Suspense>
-  );
+  return <StatsContent {...props} />;
 }

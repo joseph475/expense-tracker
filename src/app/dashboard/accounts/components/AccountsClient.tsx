@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
-import { updateAssetValue, deleteAsset } from "../../assets/actions";
+import { useAppData } from "@/lib/AppDataContext";
 import AddAssetSheet from "../../assets/components/AddAssetSheet";
 import type { AssetCategoryRow, AssetWithCategory } from "@/types/database";
 
@@ -28,12 +28,12 @@ export default function AccountsClient({
   totalAssets: number;
   totalLiabilities: number;
 }) {
+  const { updateAssetValue, deleteAsset } = useAppData();
   const [editMode, setEditMode] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   const netTotal = totalAssets - totalLiabilities;
 
@@ -49,15 +49,13 @@ export default function AccountsClient({
   function handleSaveValue(id: string) {
     const val = parseFloat(editValue);
     if (isNaN(val) || val < 0) return;
-    startTransition(async () => {
-      await updateAssetValue(id, val);
-      setEditingId(null);
-    });
+    updateAssetValue(id, val);
+    setEditingId(null);
   }
 
-  async function handleDelete(id: string) {
+  function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteAsset(id);
+    deleteAsset(id);
     setDeletingId(null);
   }
 
@@ -151,7 +149,7 @@ export default function AccountsClient({
                 <span className="text-sm font-semibold text-gray-700">
                   {group.icon} {group.label}
                 </span>
-                
+
                 {/* Liability Total Column */}
                 <div className="text-right">
                   {group.isLiability && (
@@ -160,7 +158,7 @@ export default function AccountsClient({
                     </span>
                   )}
                 </div>
-                
+
                 {/* Asset Total Column */}
                 <div className="text-right">
                   {!group.isLiability && (

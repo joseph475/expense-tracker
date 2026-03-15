@@ -1,11 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Loader2 } from "lucide-react";
-import { addAsset, type AssetFormState } from "../actions";
+import { useAppData } from "@/lib/AppDataContext";
 import type { AssetCategoryRow } from "@/types/database";
-
-const initialState: AssetFormState = { error: null, success: false };
 
 export default function AddAssetSheet({
   open,
@@ -18,19 +16,42 @@ export default function AddAssetSheet({
   currencySymbol: string;
   assetCategories: AssetCategoryRow[];
 }) {
-  const [state, formAction, isPending] = useActionState(addAsset, initialState);
+  const { addAsset } = useAppData();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
-    if (state.success) { formRef.current?.reset(); onCloseRef.current(); }
-  }, [state.success]);
-
-  useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      setError(null);
+    }
+  }, [open]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
+    const asset_category_id = (form.elements.namedItem("asset_category_id") as HTMLInputElement).value || null;
+    const current_value = parseFloat((form.elements.namedItem("current_value") as HTMLInputElement).value);
+    const rateEl = form.elements.namedItem("interest_rate") as HTMLInputElement;
+    const interest_rate = rateEl.value !== "" ? parseFloat(rateEl.value) : null;
+
+    if (!name) { setError("Asset name is required."); return; }
+    if (isNaN(current_value) || current_value < 0) { setError("Value must be 0 or more."); return; }
+
+    setIsPending(true);
+    addAsset({ name, asset_category_id, current_value, interest_rate });
+    setIsPending(false);
+    formRef.current?.reset();
+    onCloseRef.current();
+  }
 
   return (
     <div className={`${open ? 'block' : 'hidden'}`}>
@@ -52,7 +73,7 @@ export default function AddAssetSheet({
             </button>
           </div>
 
-          <form ref={formRef} action={formAction} className="flex-1 px-4 py-2 space-y-4 overflow-y-auto">
+          <form ref={formRef} onSubmit={handleSubmit} className="flex-1 px-4 py-2 space-y-4 overflow-y-auto">
 
             {/* Name */}
             <div className="space-y-1.5">
@@ -119,8 +140,8 @@ export default function AddAssetSheet({
               <p className="text-xs text-gray-500">For savings accounts — shows daily earnings on your asset card.</p>
             </div>
 
-            {state.error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{state.error}</p>
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{error}</p>
             )}
 
             <div className="flex gap-3 pt-4 mt-6">
