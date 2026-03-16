@@ -69,8 +69,8 @@ export default function BudgetsClient({ budgets, expenseCategories, thisMonthSpe
         {budgets.length === 0 ? (
           <div className="text-center py-16 text-gray-400 dark:text-gray-600">
             <div className="text-4xl mb-3">🎯</div>
-            <p className="font-medium text-gray-500 dark:text-gray-400">No budgets yet</p>
-            <p className="text-sm mt-1">Tap Add to set a monthly spending limit</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No budgets yet</p>
+            <p className="text-xs mt-1">Tap the + button to set a monthly spending limit</p>
           </div>
         ) : (
           <div className="space-y-3">

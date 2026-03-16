@@ -4,17 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ChevronRight, CloudUpload, CloudDownload, Loader2,
-  PieChart, Tag, Layers, CircleDollarSign, Moon, Sun, LogOut,
+  PieChart, Tag, Layers, CircleDollarSign, Moon, Sun, LogOut, Trash2,
 } from "lucide-react";
 import { logout } from "@/app/dashboard/actions";
 import { saveBackup, loadBackup, getLastBackupTime } from "../actions";
 import { useAppData } from "@/lib/AppDataContext";
+import { createClient } from "@/lib/supabase/client";
 import CategoryManager from "../../categories/components/CategoryManager";
 import AssetCategoryManager from "../../categories/components/AssetCategoryManager";
 import SettingsForm from "./SettingsForm";
 import SharedSheet from "@/app/dashboard/components/Sheet";
 
-type SheetType = "tx_categories" | "asset_categories" | "currency" | null;
+type SheetType = "tx_categories" | "asset_categories" | "currency" | "reset" | null;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -77,6 +78,9 @@ export default function MorePageClient() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [lastBackedUpAt, setLastBackedUpAt] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const isDark = settings.theme === "dark";
 
@@ -130,6 +134,25 @@ export default function MorePageClient() {
       window.location.reload();
     } finally {
       setRestoreLoading(false);
+    }
+  }
+
+  async function handleResetConfirm() {
+    if (!resetPassword) { setResetError("Please enter your password."); return; }
+    setResetLoading(true);
+    setResetError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email: userEmail, password: resetPassword });
+      if (error) { setResetError("Incorrect password. Please try again."); return; }
+      localStorage.removeItem(`mt_${userId}_transactions`);
+      localStorage.removeItem(`mt_${userId}_assets`);
+      localStorage.removeItem(`mt_${userId}_categories`);
+      localStorage.removeItem(`mt_${userId}_asset_categories`);
+      localStorage.removeItem(`mt_${userId}_settings`);
+      window.location.reload();
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -263,6 +286,20 @@ export default function MorePageClient() {
         </p>
       )}
 
+      {/* Danger Zone */}
+      <SectionLabel>Danger Zone</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <Row
+          icon={<Trash2 className="h-4 w-4" />}
+          iconColor="text-red-500"
+          iconBg="bg-red-50 dark:bg-red-950"
+          label="Reset All Data"
+          description="Delete all transactions, accounts & categories"
+          onClick={() => { setResetPassword(""); setResetError(null); setSheet("reset"); }}
+          border={false}
+        />
+      </div>
+
       {/* Account */}
       <SectionLabel>Account</SectionLabel>
       <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
@@ -289,6 +326,43 @@ export default function MorePageClient() {
       <SharedSheet title="Account Categories" open={sheet === "asset_categories"} onClose={() => setSheet(null)}>
         <div className="flex-1 px-4 py-3.5 overflow-y-auto">
           <AssetCategoryManager />
+        </div>
+      </SharedSheet>
+
+      <SharedSheet title="Reset All Data" open={sheet === "reset"} onClose={() => setSheet(null)} footer={
+        <div className="flex gap-3">
+          <button
+            onClick={handleResetConfirm}
+            disabled={resetLoading || !resetPassword}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold transition"
+          >
+            {resetLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Verifying...</> : "Reset All Data"}
+          </button>
+          <button onClick={() => setSheet(null)} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-semibold transition">
+            Cancel
+          </button>
+        </div>
+      }>
+        <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            This will permanently delete all transactions, accounts, and categories. This action cannot be undone.
+          </p>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
+            <div className="flex items-center px-4 h-14">
+              <span className="text-sm text-gray-500 dark:text-gray-400 w-24 shrink-0">Password</span>
+              <input
+                type="password"
+                placeholder="Enter password"
+                value={resetPassword}
+                onChange={(e) => { setResetPassword(e.target.value); setResetError(null); }}
+                className="flex-1 text-sm text-right bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+          {resetError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 rounded-xl px-3 py-2">{resetError}</p>
+          )}
         </div>
       </SharedSheet>
 
