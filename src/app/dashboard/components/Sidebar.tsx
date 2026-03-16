@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Wallet, PieChart, MoreHorizontal } from "lucide-react";
+import { BookOpen, Wallet, Target, MoreHorizontal } from "lucide-react";
 
 // Get today's date in M/D format
 function getTodayLabel() {
@@ -15,7 +15,7 @@ function getTodayLabel() {
 const links = [
   { href: "/dashboard",          label: getTodayLabel(), icon: BookOpen },
   { href: "/dashboard/accounts", label: "Accounts",      icon: Wallet },
-  { href: "/dashboard/stats",    label: "Stats",         icon: PieChart },
+  { href: "/dashboard/budgets",  label: "Budgets",       icon: Target },
   { href: "/dashboard/settings", label: "More",          icon: MoreHorizontal },
 ];
 

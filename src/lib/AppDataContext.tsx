@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
-import type { Transaction, Asset, AssetWithCategory, Category, AssetCategoryRow, TransactionWithCategory } from "@/types/database";
+import type { Transaction, Asset, AssetWithCategory, Category, AssetCategoryRow, TransactionWithCategory, Budget } from "@/types/database";
 import { DEFAULT_CATEGORIES, DEFAULT_ASSET_CATEGORIES } from "./defaults";
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
@@ -77,6 +77,11 @@ interface AppContextValue {
   deleteAssetCategory: (id: string) => void;
   // Settings
   updateSettings: (data: Settings) => void;
+  // Budgets
+  budgets: Budget[];
+  addBudget: (data: { category_id: string; amount: number }) => void;
+  updateBudget: (id: string, amount: number) => void;
+  deleteBudget: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -103,6 +108,7 @@ export function AppDataProvider({
   const [categories, setCategories] = useState<Category[]>([]);
   const [assetCategories, setAssetCategories] = useState<AssetCategoryRow[]>([]);
   const [settings, setSettings] = useState<Settings>({ currency_code: "USD", currency_symbol: "$" });
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Load from localStorage on mount
@@ -110,6 +116,7 @@ export function AppDataProvider({
     const savedTx = lsLoad<Transaction[]>(lsKey(userId, "transactions"), []);
     const savedAssets = lsLoad<Asset[]>(lsKey(userId, "assets"), []);
     const savedSettings = lsLoad<Settings>(lsKey(userId, "settings"), { currency_code: "USD", currency_symbol: "$" });
+    const savedBudgets = lsLoad<Budget[]>(lsKey(userId, "budgets"), []);
 
     // For categories: load saved, but always include defaults (merge: keep defaults + user-custom)
     const savedCats = lsLoad<Category[]>(lsKey(userId, "categories"), []);
@@ -141,6 +148,7 @@ export function AppDataProvider({
     setCategories(mergedCats);
     setAssetCategories(mergedAC);
     setSettings(savedSettings);
+    setBudgets(savedBudgets);
 
     // Apply theme class
     const isDark = savedSettings.theme === "dark";
@@ -213,6 +221,11 @@ export function AppDataProvider({
   function saveAssetCategories(updated: AssetCategoryRow[]) {
     setAssetCategories(updated);
     lsSave(lsKey(userId, "asset_categories"), updated);
+  }
+
+  function saveBudgets(updated: Budget[]) {
+    setBudgets(updated);
+    lsSave(lsKey(userId, "budgets"), updated);
   }
 
   // ─── Transaction operations ────────────────────────────────────────────────
@@ -333,6 +346,26 @@ export function AppDataProvider({
     saveAssetCategories(assetCategories.filter(ac => ac.id !== id));
   }
 
+  // ─── Budget operations ─────────────────────────────────────────────────────
+
+  function addBudget(data: { category_id: string; amount: number }) {
+    const budget: Budget = {
+      id: uid(), user_id: userId,
+      category_id: data.category_id,
+      amount: data.amount,
+      created_at: now(), updated_at: now(),
+    };
+    saveBudgets([...budgets, budget]);
+  }
+
+  function updateBudget(id: string, amount: number) {
+    saveBudgets(budgets.map(b => b.id === id ? { ...b, amount, updated_at: now() } : b));
+  }
+
+  function deleteBudget(id: string) {
+    saveBudgets(budgets.filter(b => b.id !== id));
+  }
+
   // ─── Settings ─────────────────────────────────────────────────────────────
 
   function updateSettings(data: Settings) {
@@ -360,6 +393,7 @@ export function AppDataProvider({
       addCategory, deleteCategory,
       addAssetCategory, updateAssetCategory, deleteAssetCategory,
       updateSettings,
+      budgets, addBudget, updateBudget, deleteBudget,
     }}>
       {children}
     </AppContext.Provider>

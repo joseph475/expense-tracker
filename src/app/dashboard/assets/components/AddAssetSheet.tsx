@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronRight } from "lucide-react";
 import { useAppData } from "@/lib/AppDataContext";
 import type { AssetCategoryRow } from "@/types/database";
+import Sheet from "@/app/dashboard/components/Sheet";
 
 export default function AddAssetSheet({
   open,
@@ -24,11 +25,6 @@ export default function AddAssetSheet({
   const formRef = useRef<HTMLFormElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -64,166 +60,147 @@ export default function AddAssetSheet({
   const liabilityCats = assetCategories.filter((c) => c.is_liability);
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-      />
-
-      <div className={`fixed z-60 inset-0 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
-        open ? "translate-x-0" : "translate-x-full pointer-events-none"
-      }`}>
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add Account</h2>
-            <button onClick={onClose} className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form ref={formRef} onSubmit={handleSubmit} className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
-
-            <input
-              name="name"
-              type="text"
-              required
-              placeholder="Account name *"
-              className="w-full px-0 py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowCategoryPicker(true)}
-              className="w-full flex items-center justify-between py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none transition text-left"
-            >
-              <span className={selectedCategory ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-600"}>
-                {selectedCategory
-                  ? `${selectedCategory.icon} ${selectedCategory.name}`
-                  : "Select Category"}
-              </span>
-              <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-            </button>
-
-            <div className="relative">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-base font-medium">
-                {currencySymbol}
-              </span>
-              <input
-                name="current_value"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                placeholder="Initial balance (default 0)"
-                className="w-full pl-6 pr-4 py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
-              />
-            </div>
-
-            <div className="relative">
-              <input
-                name="interest_rate"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                max="100"
-                placeholder="Annual interest rate (optional)"
-                className="w-full pl-0 pr-8 py-3 text-base bg-transparent border-0 border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-indigo-500 transition placeholder-gray-400 dark:placeholder-gray-600 text-gray-900 dark:text-white"
-              />
-              <span className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">%</span>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 rounded-xl px-3 py-2">{error}</p>
-            )}
-
-            <div className="flex gap-3 pt-4 mt-6">
-              <button
-                type="submit"
-                disabled={isPending}
-                className="flex-3 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-base font-medium transition"
-              >
-                {isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 rounded-xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition bg-gray-50 dark:bg-gray-800"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-
-          {/* Category Picker Bottom Sheet */}
-          <div
-            className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
-              showCategoryPicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={() => setShowCategoryPicker(false)}
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Add Account"
+      footer={
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            form="add-asset-form"
+            disabled={isPending}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold transition"
           >
-            <div
-              className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
-                showCategoryPicker ? "translate-y-0" : "translate-y-full"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Category</h3>
-              </div>
-              <div className="overflow-y-auto max-h-[50vh] p-4 space-y-4">
-                {assetCats.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Assets</p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {assetCats.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => { setSelectedCategory(cat); setShowCategoryPicker(false); }}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
-                            selectedCategory?.id === cat.id
-                              ? "bg-indigo-600 text-white"
-                              : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          <span className="text-2xl">{cat.icon}</span>
-                          <span className={`text-xs font-medium leading-tight ${selectedCategory?.id === cat.id ? "text-white" : "text-gray-900 dark:text-white"}`}>{cat.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {liabilityCats.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-rose-500 uppercase tracking-wide mb-3">Liabilities</p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {liabilityCats.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => { setSelectedCategory(cat); setShowCategoryPicker(false); }}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
-                            selectedCategory?.id === cat.id
-                              ? "bg-rose-500 text-white"
-                              : "bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900"
-                          }`}
-                        >
-                          <span className="text-2xl">{cat.icon}</span>
-                          <span className={`text-xs font-medium leading-tight ${selectedCategory?.id === cat.id ? "text-white" : "text-gray-900 dark:text-white"}`}>{cat.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+            {isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-semibold transition"
+          >
+            Cancel
+          </button>
+        </div>
+      }
+    >
+      <form id="add-asset-form" ref={formRef} onSubmit={handleSubmit} className="px-4 py-4 space-y-4 overflow-y-auto flex-1">
+
+        <div className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
+          {/* Name */}
+          <div className="flex items-center px-4 h-14 border-b border-gray-100 dark:border-gray-800">
+            <span className="text-sm text-gray-500 dark:text-gray-400 w-24 shrink-0">Name</span>
+            <input
+              name="name" type="text" required placeholder="Required"
+              className="flex-1 text-sm text-right bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+            />
+          </div>
+
+          {/* Category */}
+          <button type="button" onClick={() => setShowCategoryPicker(true)}
+            className="w-full flex items-center px-4 h-14 border-b border-gray-100 dark:border-gray-800 text-left">
+            <span className="text-sm text-gray-500 dark:text-gray-400 w-24 shrink-0">Category</span>
+            <span className={`flex-1 text-sm text-right mr-2 ${selectedCategory ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
+              {selectedCategory ? `${selectedCategory.icon} ${selectedCategory.name}` : "None"}
+            </span>
+            <ChevronRight className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0" />
+          </button>
+
+          {/* Balance */}
+          <div className="flex items-center px-4 h-14 border-b border-gray-100 dark:border-gray-800">
+            <span className="text-sm text-gray-500 dark:text-gray-400 w-24 shrink-0">Balance</span>
+            <div className="flex-1 flex items-center justify-end">
+              <span className="text-sm text-gray-400 dark:text-gray-500 mr-1">{currencySymbol}</span>
+              <input
+                name="current_value" type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00"
+                className="text-sm text-right bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 w-32"
+              />
             </div>
           </div>
 
+          {/* Interest rate */}
+          <div className="flex items-center px-4 h-14">
+            <span className="text-sm text-gray-500 dark:text-gray-400 w-24 shrink-0">Interest</span>
+            <div className="flex-1 flex items-center justify-end">
+              <input
+                name="interest_rate" type="number" inputMode="decimal" step="0.01" min="0" max="100" placeholder="Optional"
+                className="text-sm text-right bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 w-28"
+              />
+              <span className="text-sm text-gray-400 dark:text-gray-500 ml-1">%</span>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 rounded-xl px-3 py-2">{error}</p>
+        )}
+
+      </form>
+
+      {/* Category Picker Bottom Sheet */}
+      <div
+        className={`fixed inset-0 z-70 bg-black/40 transition-opacity duration-300 ${
+          showCategoryPicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setShowCategoryPicker(false)}
+      >
+        <div
+          className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[60vh] overflow-hidden transform transition-transform duration-300 ease-out ${
+            showCategoryPicker ? "translate-y-0" : "translate-y-full"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Category</h3>
+          </div>
+          <div className="overflow-y-auto max-h-[50vh] p-4 space-y-4">
+            {assetCats.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Assets</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {assetCats.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat); setShowCategoryPicker(false); }}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
+                        selectedCategory?.id === cat.id
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <span className="text-2xl">{cat.icon}</span>
+                      <span className={`text-xs font-medium leading-tight ${selectedCategory?.id === cat.id ? "text-white" : "text-gray-900 dark:text-white"}`}>{cat.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {liabilityCats.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-rose-500 uppercase tracking-wide mb-3">Liabilities</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {liabilityCats.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat); setShowCategoryPicker(false); }}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl transition text-center ${
+                        selectedCategory?.id === cat.id
+                          ? "bg-rose-500 text-white"
+                          : "bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900"
+                      }`}
+                    >
+                      <span className="text-2xl">{cat.icon}</span>
+                      <span className={`text-xs font-medium leading-tight ${selectedCategory?.id === cat.id ? "text-white" : "text-gray-900 dark:text-white"}`}>{cat.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </>
+    </Sheet>
   );
 }

@@ -1,57 +1,78 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronRight, X, CloudUpload, CloudDownload, Loader2 } from "lucide-react";
+import Link from "next/link";
+import {
+  ChevronRight, CloudUpload, CloudDownload, Loader2,
+  PieChart, Tag, Layers, CircleDollarSign, Moon, Sun, LogOut,
+} from "lucide-react";
 import { logout } from "@/app/dashboard/actions";
 import { saveBackup, loadBackup, getLastBackupTime } from "../actions";
 import { useAppData } from "@/lib/AppDataContext";
 import CategoryManager from "../../categories/components/CategoryManager";
 import AssetCategoryManager from "../../categories/components/AssetCategoryManager";
 import SettingsForm from "./SettingsForm";
+import SharedSheet from "@/app/dashboard/components/Sheet";
 
-type Sheet = "tx_categories" | "asset_categories" | "currency" | null;
+type SheetType = "tx_categories" | "asset_categories" | "currency" | null;
 
-function BottomSheet({
-  title,
-  open,
-  onClose,
-  children,
-}: {
-  title: string;
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-      <div className={`fixed z-60 inset-0 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
-        open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
-      }`}>
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
-            <button onClick={onClose} className="p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="flex-1 px-5 py-5 overflow-y-auto">
-            {children}
-          </div>
-        </div>
-      </div>
-    </>
+    <p className="px-4 pt-6 pb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+      {children}
+    </p>
   );
+}
+
+function Row({
+  icon,
+  iconColor = "text-indigo-500",
+  iconBg = "bg-indigo-50 dark:bg-indigo-950",
+  label,
+  description,
+  right,
+  onClick,
+  border = true,
+}: {
+  icon: React.ReactNode;
+  iconColor?: string;
+  iconBg?: string;
+  label: string;
+  description?: string;
+  right?: React.ReactNode;
+  onClick?: () => void;
+  border?: boolean;
+}) {
+  const inner = (
+    <div className={`flex items-center gap-3 px-4 py-3.5 ${border ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+        <span className={iconColor}>{icon}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
+        {description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>}
+      </div>
+      {right}
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className="w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition"
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return <div>{inner}</div>;
 }
 
 export default function MorePageClient() {
   const { userEmail, settings, userId, updateSettings } = useAppData();
-  const [sheet, setSheet] = useState<Sheet>(null);
+  const [sheet, setSheet] = useState<SheetType>(null);
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -113,156 +134,170 @@ export default function MorePageClient() {
   }
 
   function formatBackupTime(iso: string) {
-    return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+    return new Date(iso).toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit",
+    });
   }
 
-  const menuItems = [
-    {
-      key: "tx_categories" as Sheet,
-      icon: "🏷️",
-      label: "Transaction Categories",
-      description: "Manage income & expense categories",
-    },
-    {
-      key: "asset_categories" as Sheet,
-      icon: "🏦",
-      label: "Account Categories",
-      description: "Manage account types",
-    },
-    {
-      key: "currency" as Sheet,
-      icon: "💱",
-      label: "Currency",
-      description: settings.currency_code,
-    },
-  ];
+  const initials = userEmail.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-10">
+
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-4">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Settings</h1>
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3.5">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">More</h1>
       </div>
 
-      {/* User info */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center shrink-0">
-            <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-              {userEmail.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{userEmail}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Signed in</p>
-          </div>
+      {/* User card */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3.5 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+          <span className="text-lg font-bold text-white">{initials}</span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{userEmail}</p>
+          <span className="inline-flex items-center gap-1 mt-0.5 text-xs font-medium text-green-600 dark:text-green-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+            Signed in
+          </span>
         </div>
       </div>
 
-      {/* Appearance */}
-      <div className="mt-2 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex items-center gap-3 px-4 py-4">
-          <span className="text-lg shrink-0">{isDark ? "🌙" : "☀️"}</span>
+      {/* Insights */}
+      <SectionLabel>Insights</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <Link
+          href="/dashboard/stats"
+          className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 transition"
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-violet-50 dark:bg-violet-950">
+            <PieChart className="h-4 w-4 text-violet-500" />
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Dark Mode</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{isDark ? "Dark theme enabled" : "Light theme enabled"}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">Statistics</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Charts & category breakdown</p>
           </div>
-          {/* Toggle switch */}
-          <button
-            onClick={toggleTheme}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-              isDark ? "bg-indigo-600" : "bg-gray-200 dark:bg-gray-700"
-            }`}
-            role="switch"
-            aria-checked={isDark}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                isDark ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
+          <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
+        </Link>
       </div>
 
-      {/* Settings menu */}
-      <div className="mt-2 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-        {menuItems.map((item, i) => (
-          <button
-            key={item.key}
-            onClick={() => setSheet(item.key)}
-            className={`w-full flex items-center gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition text-left ${
-              i < menuItems.length - 1 ? "border-b border-gray-100 dark:border-gray-700" : ""
-            }`}
-          >
-            <span className="text-lg shrink-0">{item.icon}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{item.description}</p>
+      {/* Preferences */}
+      <SectionLabel>Preferences</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <Row
+          icon={isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          iconColor={isDark ? "text-indigo-400" : "text-amber-500"}
+          iconBg={isDark ? "bg-indigo-950" : "bg-amber-50 dark:bg-amber-950"}
+          label="Appearance"
+          description={isDark ? "Dark mode" : "Light mode"}
+          onClick={toggleTheme}
+          right={
+            <div className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${isDark ? "bg-indigo-600" : "bg-gray-200 dark:bg-gray-700"}`}
+              role="switch" aria-checked={isDark}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-6" : "translate-x-1"}`} />
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />
-          </button>
-        ))}
+          }
+        />
+        <Row
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          iconColor="text-emerald-500"
+          iconBg="bg-emerald-50 dark:bg-emerald-950"
+          label="Currency"
+          description={`${settings.currency_code} · ${settings.currency_symbol}`}
+          onClick={() => setSheet("currency")}
+          right={<ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />}
+          border={false}
+        />
       </div>
 
-      {/* Cloud Backup */}
-      <div className="mt-2 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-        <button
-          onClick={handleBackup}
-          disabled={backupLoading || restoreLoading}
-          className="w-full flex items-center gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition text-left border-b border-gray-100 dark:border-gray-700"
-        >
-          {backupLoading ? <Loader2 className="h-5 w-5 text-indigo-500 animate-spin shrink-0" /> : <CloudUpload className="h-5 w-5 text-indigo-500 shrink-0" />}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Backup to Cloud</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {lastBackedUpAt ? `Last backup: ${formatBackupTime(lastBackedUpAt)}` : "No backup yet"}
-            </p>
-          </div>
-        </button>
-        <button
-          onClick={handleRestore}
-          disabled={backupLoading || restoreLoading}
-          className="w-full flex items-center gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition text-left"
-        >
-          {restoreLoading ? <Loader2 className="h-5 w-5 text-indigo-500 animate-spin shrink-0" /> : <CloudDownload className="h-5 w-5 text-indigo-500 shrink-0" />}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Restore from Cloud</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Overwrites local data with backup</p>
-          </div>
-        </button>
-        {statusMsg && (
-          <p className={`px-4 py-2 text-xs ${statusMsg.ok ? "text-green-600" : "text-red-500"}`}>
-            {statusMsg.text}
-          </p>
-        )}
+      {/* Manage */}
+      <SectionLabel>Manage</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <Row
+          icon={<Tag className="h-4 w-4" />}
+          iconColor="text-indigo-500"
+          iconBg="bg-indigo-50 dark:bg-indigo-950"
+          label="Transaction Categories"
+          description="Income & expense labels"
+          onClick={() => setSheet("tx_categories")}
+          right={<ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />}
+        />
+        <Row
+          icon={<Layers className="h-4 w-4" />}
+          iconColor="text-indigo-500"
+          iconBg="bg-indigo-50 dark:bg-indigo-950"
+          label="Account Categories"
+          description="Asset & liability types"
+          onClick={() => setSheet("asset_categories")}
+          right={<ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" />}
+          border={false}
+        />
       </div>
 
-      {/* Sign out */}
-      <div className="mt-2 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
+      {/* Data */}
+      <SectionLabel>Data</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <Row
+          icon={backupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+          iconColor="text-sky-500"
+          iconBg="bg-sky-50 dark:bg-sky-950"
+          label="Backup to Cloud"
+          description={lastBackedUpAt ? `Last: ${formatBackupTime(lastBackedUpAt)}` : "No backup yet"}
+          onClick={backupLoading || restoreLoading ? undefined : handleBackup}
+        />
+        <Row
+          icon={restoreLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudDownload className="h-4 w-4" />}
+          iconColor="text-sky-500"
+          iconBg="bg-sky-50 dark:bg-sky-950"
+          label="Restore from Cloud"
+          description="Overwrites local data"
+          onClick={backupLoading || restoreLoading ? undefined : handleRestore}
+          border={false}
+        />
+      </div>
+      {statusMsg && (
+        <p className={`mx-4 mt-2 px-3 py-2 rounded-xl text-xs ${statusMsg.ok ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400" : "bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400"}`}>
+          {statusMsg.text}
+        </p>
+      )}
+
+      {/* Account */}
+      <SectionLabel>Account</SectionLabel>
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
         <form action={logout}>
           <button
             type="submit"
-            className="w-full flex items-center gap-3 px-4 py-4 text-left text-red-500 active:bg-red-50 dark:active:bg-red-950 transition"
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-50 dark:hover:bg-red-950 active:bg-red-100 transition text-left"
           >
-            <span className="text-lg shrink-0">🚪</span>
-            <span className="text-sm font-medium">Sign Out</span>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-red-50 dark:bg-red-950">
+              <LogOut className="h-4 w-4 text-red-500" />
+            </div>
+            <span className="text-sm font-medium text-red-500">Sign Out</span>
           </button>
         </form>
       </div>
 
       {/* Sheets */}
-      <BottomSheet title="Transaction Categories" open={sheet === "tx_categories"} onClose={() => setSheet(null)}>
-        <CategoryManager />
-      </BottomSheet>
+      <SharedSheet title="Transaction Categories" open={sheet === "tx_categories"} onClose={() => setSheet(null)}>
+        <div className="flex-1 px-4 py-3.5 overflow-y-auto">
+          <CategoryManager />
+        </div>
+      </SharedSheet>
 
-      <BottomSheet title="Account Categories" open={sheet === "asset_categories"} onClose={() => setSheet(null)}>
-        <AssetCategoryManager />
-      </BottomSheet>
+      <SharedSheet title="Account Categories" open={sheet === "asset_categories"} onClose={() => setSheet(null)}>
+        <div className="flex-1 px-4 py-3.5 overflow-y-auto">
+          <AssetCategoryManager />
+        </div>
+      </SharedSheet>
 
-      <BottomSheet title="Currency" open={sheet === "currency"} onClose={() => setSheet(null)}>
-        <SettingsForm currentCode={settings.currency_code} />
-      </BottomSheet>
+      <SharedSheet title="Currency" open={sheet === "currency"} onClose={() => setSheet(null)}>
+        <div className="flex-1 px-4 py-3.5 overflow-y-auto">
+          <SettingsForm currentCode={settings.currency_code} />
+        </div>
+      </SharedSheet>
+
     </div>
   );
 }

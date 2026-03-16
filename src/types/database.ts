@@ -74,6 +74,17 @@ export interface UserSettings {
   updated_at: string;
 }
 
+export interface Budget {
+  id: string;
+  user_id: string;
+  category_id: string;
+  amount: number; // monthly limit
+  created_at: string;
+  updated_at: string;
+}
+
+export type NewBudget = Omit<Budget, "id" | "created_at" | "updated_at">;
+
 // Insert / update payloads
 export type NewTransaction = Omit<Transaction, "id" | "created_at" | "updated_at">;
 export type NewAsset = Omit<Asset, "id" | "created_at" | "updated_at">;

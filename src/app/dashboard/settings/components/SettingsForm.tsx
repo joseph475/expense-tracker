@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronRight, X } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { CURRENCIES } from "@/lib/currency";
 import { useAppData } from "@/lib/AppDataContext";
+import Sheet from "@/app/dashboard/components/Sheet";
 
 export default function SettingsForm({ currentCode }: { currentCode: string }) {
   const { updateSettings, settings } = useAppData();
@@ -51,45 +52,28 @@ export default function SettingsForm({ currentCode }: { currentCode: string }) {
       </form>
 
       {/* Currency picker sheet */}
-      <div
-        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          sheetOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setSheetOpen(false)}
-      />
-      <div className={`fixed z-60 inset-0 bg-white dark:bg-gray-900 transform transition-transform duration-300 ease-in-out ${
-        sheetOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
-      }`}>
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Select Currency</h2>
-            <button onClick={() => setSheetOpen(false)} className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto py-2">
-            {CURRENCIES.map((c) => {
-              const active = selected === c.code;
-              return (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => { setSelected(c.code); setSheetOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 transition ${active ? "bg-indigo-50 dark:bg-indigo-950" : "hover:bg-gray-50 dark:hover:bg-gray-800"}`}
-                >
-                  <span className="text-xl w-8 text-center shrink-0">{c.symbol}</span>
-                  <div className="flex-1 text-left">
-                    <p className="text-base font-medium text-gray-900 dark:text-white">{c.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{c.code}</p>
-                  </div>
-                  {active && <Check className="h-4 w-4 text-indigo-600 shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
+      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Select Currency">
+        <div className="flex-1 overflow-y-auto py-2">
+          {CURRENCIES.map((c) => {
+            const active = selected === c.code;
+            return (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => { setSelected(c.code); setSheetOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition ${active ? "bg-indigo-50 dark:bg-indigo-950" : "hover:bg-gray-50 dark:hover:bg-gray-800"}`}
+              >
+                <span className="text-xl w-8 text-center shrink-0">{c.symbol}</span>
+                <div className="flex-1 text-left">
+                  <p className="text-base font-medium text-gray-900 dark:text-white">{c.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{c.code}</p>
+                </div>
+                {active && <Check className="h-4 w-4 text-indigo-600 shrink-0" />}
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </Sheet>
     </>
   );
 }
