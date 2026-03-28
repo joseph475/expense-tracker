@@ -102,6 +102,7 @@ export default function MorePageClient() {
         categories: JSON.parse(localStorage.getItem(`mt_${userId}_categories`) || "[]"),
         asset_categories: JSON.parse(localStorage.getItem(`mt_${userId}_asset_categories`) || "[]"),
         settings: JSON.parse(localStorage.getItem(`mt_${userId}_settings`) || "null"),
+        budgets: JSON.parse(localStorage.getItem(`mt_${userId}_budgets`) || "[]"),
       };
       const result = await saveBackup(data);
       if (result.error) {
@@ -131,6 +132,7 @@ export default function MorePageClient() {
       if (d.categories) localStorage.setItem(`mt_${userId}_categories`, JSON.stringify(d.categories));
       if (d.asset_categories) localStorage.setItem(`mt_${userId}_asset_categories`, JSON.stringify(d.asset_categories));
       if (d.settings) localStorage.setItem(`mt_${userId}_settings`, JSON.stringify(d.settings));
+      if (d.budgets) localStorage.setItem(`mt_${userId}_budgets`, JSON.stringify(d.budgets));
       window.location.reload();
     } finally {
       setRestoreLoading(false);
@@ -150,6 +152,7 @@ export default function MorePageClient() {
       localStorage.removeItem(`mt_${userId}_categories`);
       localStorage.removeItem(`mt_${userId}_asset_categories`);
       localStorage.removeItem(`mt_${userId}_settings`);
+      localStorage.removeItem(`mt_${userId}_budgets`);
       window.location.reload();
     } finally {
       setResetLoading(false);
